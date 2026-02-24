@@ -1,0 +1,14 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# React/Node
+node_modules/
+dist/
+.env
+
+# Mac System Files
+.DS_Store
+
+
