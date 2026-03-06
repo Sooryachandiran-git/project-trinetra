@@ -23,6 +23,16 @@ const useGridStore = create((set, get) => ({
       edges: addEdge(connection, get().edges),
     });
   },
+  onNodesDelete: (deleted) => {
+    set({
+      nodes: get().nodes.filter((node) => !deleted.map((d) => d.id).includes(node.id)),
+    });
+  },
+  onEdgesDelete: (deleted) => {
+    set({
+      edges: get().edges.filter((edge) => !deleted.map((d) => d.id).includes(edge.id)),
+    });
+  },
   addNode: (node) => {
     set({
       nodes: [...get().nodes, node],

@@ -9,6 +9,20 @@ import {
 import '@xyflow/react/dist/style.css';
 import useGridStore from '../store/useGridStore';
 import Topbar from '../components/Topbar';
+import BusNode from '../components/NetworkNodes/BusNode';
+import BreakerNode from '../components/NetworkNodes/BreakerNode';
+import IEDNode from '../components/NetworkNodes/IEDNode';
+import ExternalGridNode from '../components/NetworkNodes/ExternalGridNode';
+import LoadNode from '../components/NetworkNodes/LoadNode';
+import Sidebar from '../components/Sidebar';
+
+const nodeTypes = {
+  bus: BusNode,
+  breaker: BreakerNode,
+  ied: IEDNode,
+  ext_grid: ExternalGridNode,
+  load: LoadNode,
+};
 
 const TopologyCanvas = () => {
   const reactFlowWrapper = useRef(null);
@@ -54,6 +68,8 @@ const TopologyCanvas = () => {
           onDrop={onDrop}
           onDragOver={onDragOver}
           fitView
+          deleteKeyCode={['Backspace', 'Delete']}
+          nodeTypes={nodeTypes}
         >
           <Background variant="dots" gap={16} size={1} color="#CBD5E1" />
           <Controls />
@@ -69,27 +85,8 @@ export default function TopologyCanvasWrapper() {
   return (
     <ReactFlowProvider>
       <div className="flex h-screen w-full bg-slate-50">
-        {/* Placeholder for Sidebar Component (To be implemented next) */}
-        <div className="w-64 bg-white border-r border-slate-200 p-6 flex flex-col shadow-sm z-10">
-            <h2 className="font-semibold text-slate-800 mb-6 text-lg tracking-tight">Component Palette</h2>
-            <div 
-                className="p-4 bg-white border border-slate-200 shadow-sm rounded-xl text-slate-700 cursor-grab mb-3 hover:border-blue-400 hover:shadow-md transition-all flex items-center justify-center font-medium"
-                onDragStart={(event) => {
-                    event.dataTransfer.setData('application/reactflow', 'default');
-                    event.dataTransfer.effectAllowed = 'move';
-                }}
-                draggable
-            >
-                Generic Node
-            </div>
-            
-            <a 
-                href="#"
-                className="w-full mt-auto px-4 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-colors text-center border border-slate-300"
-            >
-                Back to Home
-            </a>
-        </div>
+        {/* Sidebar Palette */}
+        <Sidebar />
         <TopologyCanvas />
       </div>
     </ReactFlowProvider>
