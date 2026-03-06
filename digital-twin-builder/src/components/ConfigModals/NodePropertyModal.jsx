@@ -133,6 +133,31 @@ const NodePropertyModal = () => {
               />
               <p className="text-xs text-slate-500 mt-1">Docker internal binding port (e.g. 5020, 5021)</p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Number of Controlled Breakers</label>
+              <input
+                type="number"
+                name="num_breakers"
+                min="1"
+                max="8"
+                value={formData.num_breakers || '1'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">Controls how many connection handles are visible.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Structured Text (ST) Code</label>
+              <textarea
+                name="st_code"
+                rows="6"
+                value={formData.st_code || ''}
+                onChange={handleChange}
+                placeholder="PROGRAM trinetra_logic...\n  VAR\n    breaker_1 AT %QX0.0 : BOOL;\n  END_VAR\n..."
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-xs bg-slate-50"
+              />
+              <p className="text-[10px] text-slate-400 mt-1 italic">If left empty, a default protection program will be generated.</p>
+            </div>
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
                  Connect this IED to one or more Circuit Breakers using edges to establish control.

@@ -38,26 +38,29 @@
 ## Phase 2: Backend API & Physics Engine Bridge
 - [x] Initialize FastAPI backend
 - [x] Integrate Pandapower for Load Flow equations
-- [ ] Create Modbus TCP/IP communication layer (pymodbus)
-  - [ ] Implement Multiplier Method (Float to Int and Int to Float conversion for Modbus Registers)
-- [ ] Implement the Cyber-Physical Tick (Polling Loop via asyncio/threading every ~500ms)
-  - [ ] Read OpenPLC Modbus Coils (Trip Status)
-  - [ ] Update Pandapower switches
-  - [ ] Recalculate power flow equations
-  - [ ] Scale and Write analog values (Voltages/Currents) back to OpenPLC Holding Registers
-- [ ] **Red Teaming API Endpoints:**
-  - [ ] Create `POST /api/attack/fdia` to intercept/overwrite the Modbus write loop with malicious data.
-  - [ ] Create `POST /api/attack/dos` to intentionally block the `pymodbus` read thread for a specific port.
+- [x] Create Modbus TCP/IP communication layer (pymodbus)
+  - [x] Implement Multiplier Method (Float to Int and Int to Float conversion for Modbus Registers)
+- [x] Implement the Cyber-Physical Tick (Polling Loop via asyncio/threading every ~500ms)
+- [x] Topology Awareness: Map Breaker States (Open/Closed) to Pandapower Line service status.
 
-## Phase 3: Control Emulation (Dynamic Orchestrator)
-- [ ] Implement FastAPI Docker Compose Orchestration
-  - [ ] Render a dynamic `docker-compose.yml` file into a dedicated `backend-orchestrator/temp_run/` folder from the JSON payload.
+## Phase 3: Dynamic Orchestrator (Docker Automation)
+- [x] Implement `DockerManager` to automatically spin up/down OpenPLC containers.
+- [x] Automatic Port Mapping (8080 -> Web, 502 -> Modbus) per IED.
+- [x] ST Code Generator: Automatically create `.st` files based on the visual topology nodes.
+- [x] Provisioning Engine: Automate the upload and start of PLC programs within containers.
+
+## Phase 4: Red Teaming & Adversarial Simulation
+- [ ] Implement Red Teaming API Endpoints:
+  - [ ] **Spoofing Attack:** Endpoint to force-write malicious values to Modbus registers.
+  - [ ] **DoS Simulation:** Endpoint to temporarily block/flood IED communication.
+  - [ ] **Replay Attack:** Record and playback a sequence of breaker commands.
+- [ ] Integration: Connect the React UI "Attack" panel to these backend endpoints.
+- [ ] Visual Feedback: Show "Alert" states in the UI when an attack is active.
   - [ ] Ensure `.gitignore` ignores `backend-orchestrator/temp_run/` to prevent overwriting Git histories.
   - [ ] Execute `subprocess.run(["docker-compose", "-f", "dynamic_lab.yml", "up", "-d"])` on Deploy.
   - [ ] Ensure clean teardown via `docker-compose down` on Stop to prevent port conflicts.
 - [ ] Automate `.st` Payload Injection via FastAPI HTTP Requests
   - [ ] Automatically POST the uploaded `.st` logic to `http://localhost:<PORT>/upload-program`
-  - [ ] Automatically execute web commands to compile and start the logic inside the container
 - [ ] **Distance Protection Logic Implementation:** Ensure the base OpenPLC `.st` file calculates Impedance (`Z=V/I`) to accurately replicate the lab's Distance Protection relays.
 - [ ] Integrate OpenPLC Modbus states tightly with Pandapower physics loop
 

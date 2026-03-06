@@ -1,3 +1,4 @@
+import os
 import asyncio
 import logging
 import time
@@ -45,12 +46,20 @@ class SimulationEngine:
             
             # Launch container
             if self.docker.run_ied(ied.id, ied.port, web_port):
-                # Generate and Inject .st logic
                 controlled_breakers = [
                     m.breaker_id for m in payload.scada_system.control_mappings 
                     if m.ied_id == ied.id
                 ]
-                st_path = self.st_gen.generate_st(ied.id, controlled_breakers)
+                
+                # Check for custom ST code from the UI
+                if ied.st_code:
+                    logger.info(f"IED {ied.id}: Using custom ST code from UI.")
+                    st_path = os.path.join(self.st_gen.output_dir, f"ied_{ied.id}_custom.st")
+                    with open(st_path, "w") as f:
+                        f.write(ied.st_code)
+                else:
+                    st_path = self.st_gen.generate_st(ied.id, controlled_breakers)
+                
                 await self.prov.provision_ied(ied.id, st_path, web_port)
             
         # Wait for containers to be fully up
@@ -130,13 +139,13 @@ class SimulationEngine:
         import pandapower as pp
         try:
             pp.runpp(self.net)
+            logger.info("--- Physics Tick: Power Flow Converged ---")
         except Exception as e:
             logger.warning(f"Power flow failed to converge (possibly islanded): {e}")
 
         # 4. WRITE: Update IED sensors (e.g., Bus Voltages)
-        # In a real setup, we'd map specific bus voltages to specific registers
         if hasattr(self.net, 'res_bus') and not self.net.res_bus.empty:
+            voltage = self.net.res_bus.vm_pu.iloc[0]
             for ied in self.payload.scada_system.ieds:
-                # For demo, just write the first bus voltage (multiplied)
-                voltage = self.net.res_bus.vm_pu.iloc[0]
                 await self.modbus.write_sensor_value(ied.id, 0, voltage)
+                logger.info(f"Cyber Tick: Wrote Voltage {voltage:.4f} pu to IED {ied.id}")

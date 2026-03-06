@@ -48,6 +48,8 @@ class IEDModel(BaseModel):
     id: str
     name: str = "IED"
     port: int
+    num_breakers: int = 1
+    st_code: str = None
     protocols: List[str]
 
 class ControlMappingModel(BaseModel):

@@ -78,6 +78,8 @@ export const compileGridToJSON = (nodes, edges) => {
           id: node.id,
           name: node.data.label || 'IED',
           port: parseInt(node.data.port) || 5020,
+          num_breakers: parseInt(node.data.num_breakers) || 1,
+          st_code: node.data.st_code || null,
           protocols: ['ModbusTCP']
         });
         break;

@@ -9,8 +9,14 @@ const IEDNode = ({ data, isConnectable }) => {
     <div className={`px-4 py-3 shadow-md rounded-md bg-slate-900 border-2 min-w-[200px] transition-colors ${isOnline ? 'border-slate-700' : 'border-amber-500'}`}>
       
       <div className="flex items-center space-x-3 mb-2">
-        <div className={`w-8 h-8 rounded-md flex items-center justify-center ${isOnline ? 'bg-slate-800' : 'bg-amber-500/20'}`}>
-          <Server size={18} className={isOnline ? 'text-blue-400' : 'text-amber-500'} />
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center relative ${isOnline ? 'bg-blue-500/10' : 'bg-amber-500/10'}`}>
+          <Server size={20} className={isOnline ? 'text-blue-400' : 'text-amber-500'} />
+          {isOnline && (
+            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+            </span>
+          )}
         </div>
         <div className="flex-grow">
           <div className="text-sm font-bold text-white">{data.label || 'OpenPLC IED'}</div>
@@ -29,13 +35,17 @@ const IEDNode = ({ data, isConnectable }) => {
         They don't connect physically to the power line (Pandapower),
         but we use React Flow edges to logically map which breakers they control. 
       */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="control_out"
-        isConnectable={isConnectable}
-        className="w-4 h-2 bg-blue-500 rounded-sm"
-      />
+      {Array.from({ length: parseInt(data.num_breakers || 1) }).map((_, i) => (
+        <Handle
+          key={`control_out_${i}`}
+          type="source"
+          position={Position.Bottom}
+          id={`control_out_${i}`}
+          isConnectable={isConnectable}
+          className="w-4 h-2 bg-blue-500 rounded-sm"
+          style={{ left: `${(i + 1) * (100 / (parseInt(data.num_breakers || 1) + 1))}%` }}
+        />
+      ))}
     </div>
   );
 };
