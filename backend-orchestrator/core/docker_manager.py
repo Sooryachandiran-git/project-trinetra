@@ -8,12 +8,12 @@ class DockerManager:
     """
     Automates the lifecycle of OpenPLC Docker containers for the TRINETRA testbed.
     """
-    def __init__(self, image: str = "thiagoralves/openplc_v3"):
+    def __init__(self, image: str = "tuttas/openplc_v3"):
         try:
             self.client = docker.from_env()
             self.image = image
-            # Ensure the image is available
-            # self.client.images.pull(self.image) 
+            # On Apple Silicon Macs, we need to force amd64 for this specific image
+            self.platform = "linux/amd64" 
         except Exception as e:
             logger.error(f"Failed to initialize Docker client: {e}")
             self.client = None
@@ -46,6 +46,7 @@ class DockerManager:
                 self.image,
                 name=container_name,
                 detach=True,
+                platform=self.platform,
                 ports={
                     '8080/tcp': web_port,
                     '502/tcp': modbus_port
