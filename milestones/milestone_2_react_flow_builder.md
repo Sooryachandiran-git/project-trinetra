@@ -129,6 +129,41 @@ const onDrop = (event) => {
   addNode({ id: Math.random(), type, position, data: {} });
 };
 ```
+### Concept 5: The Mathematical JSON Compiler
+React Flow produces visually-focused JSON objects that contain things like `position: { x: 100, y: 200 }`. However, pure math and physics engines like Pandapower only care about parameters like *Voltage*, *Active Power (MW)*, and *Graph Topology*.
+
+To bridge this gap, we built a **Compiler Utility** (`jsonBuilder.js`) attached to the "Deploy" button.
+
+When clicked, the compiler iterates through the React Flow state and translates it into backend-ready JSON:
+
+```javascript
+// src/utils/jsonBuilder.js
+
+const payload = {
+  electrical_grid: {
+    buses: [],
+    ext_grids: [],
+    loads: [],
+    switches: []
+  },
+  scada_system: {
+    control_mappings: []
+  }
+};
+
+nodes.forEach(node => {
+  if (node.type === 'load') {
+    // We strip away X/Y coordinates and UI data, 
+    // extracting only the pure physics variables from our Modal Forms
+    payload.electrical_grid.loads.push({
+      id: node.id,
+      p_mw: parseFloat(node.data.p_mw),
+      q_mvar: parseFloat(node.data.q_mvar)
+    });
+  }
+});
+```
+We also capture the logical connection lines (`edges`)! If an edge connects an `IED` to a `Breaker`, the compiler automatically recognizes this as a SCADA Control Mapping rather than a physical electrical wire.
 
 ---
 
