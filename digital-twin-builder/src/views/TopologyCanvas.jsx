@@ -8,6 +8,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import useGridStore from '../store/useGridStore';
+import Topbar from '../components/Topbar';
 
 const TopologyCanvas = () => {
   const reactFlowWrapper = useRef(null);
@@ -21,50 +22,48 @@ const TopologyCanvas = () => {
   const onDrop = useCallback(
     (event) => {
       event.preventDefault();
-
       const type = event.dataTransfer.getData('application/reactflow');
-      
-      // Check if the dropped element is valid
       if (typeof type === 'undefined' || !type) {
         return;
       }
-
       const position = {
         x: event.clientX - reactFlowWrapper.current.getBoundingClientRect().left,
         y: event.clientY - reactFlowWrapper.current.getBoundingClientRect().top,
       };
-
       const newNode = {
         id: `node_${Math.random().toString(36).substring(2, 9)}`,
         type,
         position,
         data: { label: `${type} node` },
       };
-
       addNode(newNode);
     },
     [addNode]
   );
 
   return (
-    <div className="flex-grow h-full w-full" ref={reactFlowWrapper}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        onDrop={onDrop}
-        onDragOver={onDragOver}
-        fitView
-      >
-        <Background variant="dots" gap={16} size={1} color="#CBD5E1" />
-        <Controls />
-        <MiniMap />
-      </ReactFlow>
+    <div className="flex-grow h-full w-full flex flex-col">
+      <Topbar />
+      <div className="flex-grow w-full relative" ref={reactFlowWrapper}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          fitView
+        >
+          <Background variant="dots" gap={16} size={1} color="#CBD5E1" />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+      </div>
     </div>
   );
 };
+
 
 export default function TopologyCanvasWrapper() {
   return (
