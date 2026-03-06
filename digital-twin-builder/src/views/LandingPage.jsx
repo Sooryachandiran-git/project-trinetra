@@ -23,9 +23,9 @@ function LandingPage() {
           <p className="text-center text-slate-500 text-sm leading-relaxed">
             Design and simulate power grid topologies with Pandapower and OpenPLC.
           </p>
-          <div className="mt-8 px-6 py-2 bg-slate-900 text-white text-sm font-medium rounded-full shadow-lg group-hover:bg-blue-600 transition-colors">
+          <a href="#workspace" className="mt-8 px-6 py-2 bg-slate-900 text-white text-sm font-medium rounded-full shadow-lg group-hover:bg-blue-600 transition-colors inline-block">
             Open Workspace
-          </div>
+          </a>
         </div>
 
         {/* Placeholder for future plant types */}
