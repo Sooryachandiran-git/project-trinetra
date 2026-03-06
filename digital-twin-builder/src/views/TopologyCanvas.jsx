@@ -49,15 +49,23 @@ const TopologyCanvas = () => {
         x: event.clientX - reactFlowWrapper.current.getBoundingClientRect().left,
         y: event.clientY - reactFlowWrapper.current.getBoundingClientRect().top,
       };
+
+      // Determine the next numerical ID for this specific type
+      const typeCount = nodes.filter((n) => n.type === type).length + 1;
+      
+      // Formatting the label (e.g., 'ext_grid' -> 'Ext Grid 1')
+      const formattedType = type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
       const newNode = {
         id: `node_${Math.random().toString(36).substring(2, 9)}`,
         type,
         position,
-        data: { label: `${type} node` },
+        data: { label: `${formattedType} ${typeCount}` },
       };
+      
       addNode(newNode);
     },
-    [addNode]
+    [addNode, nodes]
   );
 
   return (

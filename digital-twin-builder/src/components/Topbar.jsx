@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { Save, Upload, Play } from 'lucide-react';
 import useGridStore from '../store/useGridStore';
+import { compileGridToJSON } from '../utils/jsonBuilder';
 
 const Topbar = () => {
   const { nodes, edges, loadGrid } = useGridStore();
@@ -57,6 +58,13 @@ const Topbar = () => {
     event.target.value = '';
   };
 
+  const handleDeploy = () => {
+    const payload = compileGridToJSON(nodes, edges);
+    console.log('--- GENERATED FASTAPI PAYLOAD ---');
+    console.log(JSON.stringify(payload, null, 2));
+    alert('Architecture Compiled! \n\nCheck your browser console (F12) to see the JSON payload generated for FastAPI.');
+  };
+
   return (
     <div className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 shadow-sm z-20">
       <div className="flex items-center space-x-4">
@@ -91,7 +99,10 @@ const Topbar = () => {
 
         <div className="w-px h-6 bg-slate-200 mx-2"></div>
 
-        <button className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg shadow-sm transition-colors">
+        <button 
+          onClick={handleDeploy}
+          className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg shadow-sm transition-colors"
+        >
           <Play size={18} fill="currentColor" />
           <span>Deploy</span>
         </button>
