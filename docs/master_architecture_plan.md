@@ -1,11 +1,11 @@
 # Project TRINETRA Tasks
 
 ## Phase 1: Digital Twin Builder (Frontend)
-- [ ] Initialize React application (using Vite)
-- [ ] Set up project structure, routing, and core CSS
-  - [ ] Implement a highly professional, modular, light-themed design system
-- [ ] Create Home Page (Landing / Plant Selection)
-  - [ ] Add a prominent icon/card for "Electrical SCADA System" selection
+- [x] Initialize React application (using Vite)
+- [x] Set up project structure, routing, and core CSS
+  - [x] Implement a highly professional, modular, light-themed design system (Tailwind v4)
+- [x] Create Home Page (Landing / Plant Selection)
+  - [x] Add a prominent icon/card for "Electrical SCADA System" selection
 - [ ] Install and configure `reactflow` for the grid topology canvas
 - [ ] Create the main application layout (Header, Sidebar, Workspace)
 - [ ] Implement the React Connective Tissue (Store, Services, Utils)
