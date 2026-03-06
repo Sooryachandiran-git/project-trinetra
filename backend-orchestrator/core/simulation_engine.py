@@ -4,6 +4,9 @@ import time
 from typing import Optional, Dict, Any
 from core.grid_builder import build_pandapower_network
 from core.modbus_manager import ModbusManager
+from core.docker_manager import DockerManager
+from core.st_generator import STGenerator
+from core.provisioner import Provisioner
 from api.models import DeploymentPayload
 
 logger = logging.getLogger("SimulationEngine")
@@ -18,23 +21,46 @@ class SimulationEngine:
         self.payload: Optional[DeploymentPayload] = None
         self.net = None
         self.modbus = ModbusManager()
+        self.docker = DockerManager()
+        self.st_gen = STGenerator()
+        self.prov = Provisioner(self.docker)
+        
         self.is_running = False
         self.tick_rate = 0.5  # 500ms target
         self._task: Optional[asyncio.Task] = None
+        self.mappings = {}
 
     async def start(self, payload: DeploymentPayload):
-        """Initialize the grid and start the background simulation task."""
+        """Initialize containers, provision logic, and start the polling loop."""
         if self.is_running:
             await self.stop()
 
-        logger.info("Starting Simulation Engine...")
+        logger.info("Initializing Dynamic Orchestrator...")
         self.payload = payload
         
-        # 1. Initialize Pandapower net and store internal mappings
+        # 1. Start Docker containers for IEDs & Provision logic
+        for ied in payload.scada_system.ieds:
+            # Generate Web Port (e.g., 8080 + IED offset)
+            web_port = 8080 + payload.scada_system.ieds.index(ied)
+            
+            # Launch container
+            if self.docker.run_ied(ied.id, ied.port, web_port):
+                # Generate and Inject .st logic
+                controlled_breakers = [
+                    m.breaker_id for m in payload.scada_system.control_mappings 
+                    if m.ied_id == ied.id
+                ]
+                st_path = self.st_gen.generate_st(ied.id, controlled_breakers)
+                await self.prov.provision_ied(ied.id, st_path, web_port)
+            
+        # Wait for containers to be fully up
+        await asyncio.sleep(2) 
+
+        # 2. Initialize Pandapower net
         self.net, diagnostics = build_pandapower_network(payload)
         self.mappings = diagnostics.get("mappings", {})
         
-        # 2. Connect to all defined IEDs
+        # 3. Connect to all IEDs via Modbus
         for ied in payload.scada_system.ieds:
             await self.modbus.connect_ied(ied.id, "127.0.0.1", ied.port)
 
@@ -42,8 +68,8 @@ class SimulationEngine:
         self._task = asyncio.create_task(self._run_loop())
 
     async def stop(self):
-        """Stop the loop and disconnect Modbus clients."""
-        logger.info("Stopping Simulation Engine...")
+        """Stop simulation and cleanup Docker containers."""
+        logger.info("Halt triggered: Cleaning up testbed...")
         self.is_running = False
         if self._task:
             self._task.cancel()
@@ -53,6 +79,8 @@ class SimulationEngine:
                 pass
         
         await self.modbus.disconnect_all()
+        self.docker.stop_all_ieds()
+        
         self.net = None
         self.payload = None
 
