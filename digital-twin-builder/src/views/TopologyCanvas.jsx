@@ -15,6 +15,7 @@ import IEDNode from '../components/NetworkNodes/IEDNode';
 import ExternalGridNode from '../components/NetworkNodes/ExternalGridNode';
 import LoadNode from '../components/NetworkNodes/LoadNode';
 import Sidebar from '../components/Sidebar';
+import NodePropertyModal from '../components/ConfigModals/NodePropertyModal';
 
 const nodeTypes = {
   bus: BusNode,
@@ -26,7 +27,11 @@ const nodeTypes = {
 
 const TopologyCanvas = () => {
   const reactFlowWrapper = useRef(null);
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode } = useGridStore();
+  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, addNode, openModal } = useGridStore();
+
+  const onNodeDoubleClick = useCallback((event, node) => {
+    openModal(node.id);
+  }, [openModal]);
 
   const onDragOver = useCallback((event) => {
     event.preventDefault();
@@ -58,6 +63,7 @@ const TopologyCanvas = () => {
   return (
     <div className="flex-grow h-full w-full flex flex-col">
       <Topbar />
+      <NodePropertyModal />
       <div className="flex-grow w-full relative" ref={reactFlowWrapper}>
         <ReactFlow
           nodes={nodes}
@@ -67,6 +73,7 @@ const TopologyCanvas = () => {
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeDoubleClick={onNodeDoubleClick}
           fitView
           deleteKeyCode={['Backspace', 'Delete']}
           nodeTypes={nodeTypes}

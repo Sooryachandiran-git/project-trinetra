@@ -19,7 +19,7 @@ const BusNode = ({ data, isConnectable }) => {
         </div>
         <div>
           <div className="text-sm font-bold text-slate-800">{data.label || 'Bus Node'}</div>
-          <div className="text-xs text-slate-500">110 kV</div>
+          <div className="text-xs text-slate-500">{data.vn_kv || '110.0'} kV</div>
         </div>
       </div>
 

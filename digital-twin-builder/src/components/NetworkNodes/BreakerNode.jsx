@@ -3,7 +3,8 @@ import { Handle, Position } from '@xyflow/react';
 import { Power } from 'lucide-react';
 
 const BreakerNode = ({ data, isConnectable }) => {
-  const isClosed = data.status === 1 || data.status === 'Closed';
+  const currentStatus = data.status || 'Closed';
+  const isClosed = currentStatus === 1 || currentStatus === 'Closed';
 
   return (
     <div className={`px-4 py-2 shadow-sm rounded-md bg-white border-2 min-w-[160px] transition-colors ${isClosed ? 'border-emerald-500' : 'border-rose-500'}`}>

@@ -12,7 +12,9 @@ const ExternalGridNode = ({ data, isConnectable }) => {
         </div>
         <div>
           <div className="text-sm font-bold text-slate-800">{data.label || 'External Grid'}</div>
-          <div className="text-xs text-slate-500 font-mono">1.0 pu / 0 deg</div>
+          <div className="text-xs text-slate-500 font-mono">
+            {data.vm_pu || '1.00'} pu / {data.va_degree || '0.0'} deg
+          </div>
         </div>
       </div>
 

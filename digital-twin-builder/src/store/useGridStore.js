@@ -8,6 +8,12 @@ import {
 const useGridStore = create((set, get) => ({
   nodes: [],
   edges: [],
+  isModalOpen: false,
+  selectedNodeId: null,
+
+  openModal: (nodeId) => set({ isModalOpen: true, selectedNodeId: nodeId }),
+  closeModal: () => set({ isModalOpen: false, selectedNodeId: null }),
+
   onNodesChange: (changes) => {
     set({
       nodes: applyNodeChanges(changes, get().nodes),
@@ -42,7 +48,11 @@ const useGridStore = create((set, get) => ({
     set({
       nodes: get().nodes.map((node) => {
         if (node.id === nodeId) {
-          node.data = { ...node.data, ...data };
+          // React Flow requires a new object reference to trigger a re-render
+          return {
+            ...node,
+            data: { ...node.data, ...data },
+          };
         }
         return node;
       })
