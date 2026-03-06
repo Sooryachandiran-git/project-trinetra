@@ -133,6 +133,72 @@ const NodePropertyModal = () => {
               />
               <p className="text-xs text-slate-500 mt-1">Docker internal binding port (e.g. 5020, 5021)</p>
             </div>
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+               <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
+                 Connect this IED to one or more Circuit Breakers using edges to establish control.
+               </p>
+            </div>
+          </div>
+        );
+      case 'transmission_line':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Length (km)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="length_km"
+                value={formData.length_km || '10.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Resistance (R ohm/km)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  name="r_ohm_per_km"
+                  value={formData.r_ohm_per_km || '0.1'}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Reactance (X ohm/km)</label>
+                <input
+                  type="number"
+                  step="0.001"
+                  name="x_ohm_per_km"
+                  value={formData.x_ohm_per_km || '0.2'}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+          </div>
+        );
+      case 'network_switch':
+        return (
+          <div className="space-y-4">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+               <p className="text-xs text-slate-600 italic">
+                 Visual component representing an Ethernet Switch. Used for organizational layering.
+               </p>
+            </div>
+          </div>
+        );
+      case 'scada_server':
+      case 'gps_clock':
+        return (
+          <div className="space-y-4">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200">
+               <p className="text-xs text-slate-600 italic">
+                 Visual representation of Control Room assets.
+               </p>
+            </div>
           </div>
         );
       default:

@@ -1,0 +1,9 @@
+{
+    "python.defaultInterpreterPath": "${workspaceFolder}/backend-orchestrator/venv/bin/python3",
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/backend-orchestrator"
+    ],
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "python.languageServer": "Pylance"
+}

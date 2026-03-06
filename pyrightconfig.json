@@ -1,0 +1,15 @@
+{
+    "venvPath": ".",
+    "venv": "backend-orchestrator/venv",
+    "include": [
+        "backend-orchestrator"
+    ],
+    "extraPaths": [
+        "backend-orchestrator"
+    ],
+    "exclude": [
+        "**/node_modules",
+        "**/__pycache__",
+        "backend-orchestrator/venv"
+    ]
+}

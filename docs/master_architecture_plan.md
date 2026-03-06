@@ -6,32 +6,26 @@
   - [x] Implement a highly professional, modular, light-themed design system (Tailwind v4)
 - [x] Create Home Page (Landing / Plant Selection)
   - [x] Add a prominent icon/card for "Electrical SCADA System" selection
-- [ ] Install and configure `reactflow` for the grid topology canvas
-- [ ] Create the main application layout (Header, Sidebar, Workspace)
-- [ ] Implement the React Connective Tissue (Store, Services, Utils)
-  - [ ] **State Manager:** Create `src/store/useGridStore.js` (Zustand) for centralized React Flow state.
-  - [ ] **API Messenger:** Create `src/services/api.js` and `src/services/fastApiBridge.js` for Axios communication.
-  - [ ] **JSON Compiler:** Create `src/utils/jsonBuilder.js` to compile visual nodes into the FastAPI payload on "Deploy".
-- [ ] Implement the Draggable Component Palette (Sidebar)
-  - [ ] **Electrical Components Panel**
-    - [ ] External Grid (`vm_pu`)
-    - [ ] Bus (`vn_kv`)
-    - [ ] Transmission Line (`length_km`, `r_ohm_per_km`, `x_ohm_per_km`)
-    - [ ] Circuit Breaker (State: Closed/Open)
-    - [ ] Load (`p_mw`, `q_mvar`)
-  - [ ] **SCADA Components Panel**
-    - [ ] IED (Bind Port, Controlled Breakers)
-    - [ ] Network Switch (Visual only)
-    - [ ] GPS Clock & Protocol Converter (Visual only)
-    - [ ] RTU / SCADA PC (Visual representation of backend)
-- [ ] Implement the interactive Topology Canvas with React Flow
-  - [ ] **Aesthetics:** Use light-gray dot grid background (`variant="dots" gap={16}`).
-  - [ ] **Routing:** Use orthogonal step-paths (`type="smoothstep"`) for edges, strictly 90-degree lines.
-  - [ ] **Node Design (Hybrid):** Professional white cards with shadows containing traditional electrical symbols. Show critical micro-badges (State/Voltage) up front, hide deep config behind double-click modals.
-  - [ ] **Dynamic Handles:** 
-    - Bus nodes operate as massive bars (unlimited connections).
-    - IEDs dynamically generate handles based on "Number of Controlled Breakers" input. 
-    - Breakers/Lines strictly 1-in, 1-out.
+- [x] Install and configure `reactflow` for the grid topology canvas
+- [x] Create the main application layout (Header, Sidebar, Workspace)
+- [x] Implement the React Connective Tissue (Store, Services, Utils)
+  - [x] **State Manager:** Create `src/store/useGridStore.js` (Zustand) for centralized React Flow state.
+  - [x] **API Messenger:** Create `src/services/api.js` and `src/services/fastApiBridge.js` for Axios communication.
+  - [x] **JSON Compiler:** Create `src/utils/jsonBuilder.js` to compile visual nodes into the FastAPI payload on "Deploy".
+- [x] Implement the Draggable Component Palette (Sidebar)
+  - [x] **Electrical Components Panel**
+    - [x] External Grid (`vm_pu`)
+    - [x] Bus (`vn_kv`)
+    - [x] Transmission Line (`length_km`, `r_ohm_per_km`, `x_ohm_per_km`)
+    - [x] Circuit Breaker (State: Closed/Open)
+    - [x] Load (`p_mw`, `q_mvar`)
+  - [x] **SCADA Components Panel**
+    - [x] IED (Bind Port, Controlled Breakers)
+    - [x] Network Switch (Visual only)
+    - [x] GPS Clock & Protocol Converter (Visual only)
+    - [x] RTU / SCADA PC (Visual representation of backend)
+- [x] Implement the interactive Topology Canvas with React Flow
+  - [x] **Aesthetics:** Use light-gray dot grid background (`variant="dots" gap={16}`).
   - [ ] **Design Mode (Builder):** Drag, drop, route wires, and double-click to set Pandapower parameters.
   - [ ] **Run Mode (Dual-View Dashboard):**
     - Transition triggers upon "Deploy" (Canvas locks, sidebar hides).
@@ -42,8 +36,8 @@
 - [ ] State Management for the Grid Topology (saving/loading grid state and JSON payload generation). Ensure backend routing Maps 1 IED to 2 Breakers natively (e.g., R1 controls BR1 & BR2).
 
 ## Phase 2: Backend API & Physics Engine Bridge
-- [ ] Initialize FastAPI backend
-- [ ] Integrate Pandapower for Load Flow equations
+- [x] Initialize FastAPI backend
+- [x] Integrate Pandapower for Load Flow equations
 - [ ] Create Modbus TCP/IP communication layer (pymodbus)
   - [ ] Implement Multiplier Method (Float to Int and Int to Float conversion for Modbus Registers)
 - [ ] Implement the Cyber-Physical Tick (Polling Loop via asyncio/threading every ~500ms)

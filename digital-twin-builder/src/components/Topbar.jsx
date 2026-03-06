@@ -1,10 +1,12 @@
-import React, { useRef } from 'react';
-import { Save, Upload, Play } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Save, Upload, Play, Loader2 } from 'lucide-react';
 import useGridStore from '../store/useGridStore';
 import { compileGridToJSON } from '../utils/jsonBuilder';
+import { sendDeployPayload } from '../services/api';
 
 const Topbar = () => {
   const { nodes, edges, loadGrid } = useGridStore();
+  const [isDeploying, setIsDeploying] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleSave = () => {
@@ -58,11 +60,35 @@ const Topbar = () => {
     event.target.value = '';
   };
 
-  const handleDeploy = () => {
-    const payload = compileGridToJSON(nodes, edges);
-    console.log('--- GENERATED FASTAPI PAYLOAD ---');
-    console.log(JSON.stringify(payload, null, 2));
-    alert('Architecture Compiled! \n\nCheck your browser console (F12) to see the JSON payload generated for FastAPI.');
+  const handleDeploy = async () => {
+    setIsDeploying(true);
+    try {
+      const payload = compileGridToJSON(nodes, edges);
+      console.log('--- SENDING FASTAPI PAYLOAD ---', payload);
+      
+      const response = await sendDeployPayload(payload);
+      
+      const results = response.diagnostics?.results;
+      let resultStats = "No simulation results available.";
+      
+      if (results && results.converged) {
+        resultStats = "Simulation Converged!\n\nBus Voltages:\n";
+        Object.entries(results.bus_voltages).forEach(([id, voltage]) => {
+          const name = results.bus_names[id] || `Bus ${id}`;
+          resultStats += `- ${name}: ${Number(voltage).toFixed(4)} pu\n`;
+        });
+      } else if (results && !results.converged) {
+        resultStats = `Simulation Failed to Converge: ${results.reason || results.error || "Unknown Error"}`;
+      }
+
+      alert(`Architecture Deployed Successfully!\n\n${resultStats}\n\nExecution Time: ${response.execution_time_ms}ms`);
+      console.log("Diagnostics:", response.diagnostics);
+      
+    } catch (error) {
+      alert(`Deployment Failed:\n\n${error.message}`);
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   return (

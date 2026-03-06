@@ -63,6 +63,16 @@ export const compileGridToJSON = (nodes, edges) => {
         });
         break;
 
+      case 'transmission_line':
+        payload.electrical_grid.lines.push({
+          id: node.id,
+          name: node.data.label || 'Transmission Line',
+          length_km: parseFloat(node.data.length_km) || 10.0,
+          r_ohm_per_km: parseFloat(node.data.r_ohm_per_km) || 0.1,
+          x_ohm_per_km: parseFloat(node.data.x_ohm_per_km) || 0.2
+        });
+        break;
+
       case 'ied':
         payload.scada_system.ieds.push({
           id: node.id,
@@ -70,6 +80,13 @@ export const compileGridToJSON = (nodes, edges) => {
           port: parseInt(node.data.port) || 5020,
           protocols: ['ModbusTCP']
         });
+        break;
+
+      case 'network_switch':
+      case 'gps_clock':
+      case 'scada_server':
+        // These are purely visual/cyber nodes for the UI layout, 
+        // they don't affect the physical Pandapower engine directly (yet)
         break;
         
       default:

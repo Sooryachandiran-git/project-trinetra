@@ -14,6 +14,10 @@ import BreakerNode from '../components/NetworkNodes/BreakerNode';
 import IEDNode from '../components/NetworkNodes/IEDNode';
 import ExternalGridNode from '../components/NetworkNodes/ExternalGridNode';
 import LoadNode from '../components/NetworkNodes/LoadNode';
+import TransmissionLineNode from '../components/NetworkNodes/TransmissionLineNode';
+import NetworkSwitchNode from '../components/NetworkNodes/NetworkSwitchNode';
+import GPSClockNode from '../components/NetworkNodes/GPSClockNode';
+import ScadaServerNode from '../components/NetworkNodes/ScadaServerNode';
 import Sidebar from '../components/Sidebar';
 import NodePropertyModal from '../components/ConfigModals/NodePropertyModal';
 
@@ -23,6 +27,8 @@ const nodeTypes = {
   ied: IEDNode,
   ext_grid: ExternalGridNode,
   load: LoadNode,
+  transmission_line: TransmissionLineNode,
+  gps_clock: GPSClockNode
 };
 
 const TopologyCanvas = () => {
