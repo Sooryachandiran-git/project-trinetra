@@ -8,6 +8,10 @@
   - [ ] Add a prominent icon/card for "Electrical SCADA System" selection
 - [ ] Install and configure `reactflow` for the grid topology canvas
 - [ ] Create the main application layout (Header, Sidebar, Workspace)
+- [ ] Implement the React Connective Tissue (Store, Services, Utils)
+  - [ ] **State Manager:** Create `src/store/useGridStore.js` (Zustand) for centralized React Flow state.
+  - [ ] **API Messenger:** Create `src/services/api.js` and `src/services/fastApiBridge.js` for Axios communication.
+  - [ ] **JSON Compiler:** Create `src/utils/jsonBuilder.js` to compile visual nodes into the FastAPI payload on "Deploy".
 - [ ] Implement the Draggable Component Palette (Sidebar)
   - [ ] **Electrical Components Panel**
     - [ ] External Grid (`vm_pu`)
@@ -53,7 +57,8 @@
 
 ## Phase 3: Control Emulation (Dynamic Orchestrator)
 - [ ] Implement FastAPI Docker Compose Orchestration
-  - [ ] Render a dynamic `docker-compose.yml` file from the JSON payload (defining `tuttas/openplc_v3` images, explicit port mappings, and `influxdb`).
+  - [ ] Render a dynamic `docker-compose.yml` file into a dedicated `backend-orchestrator/temp_run/` folder from the JSON payload.
+  - [ ] Ensure `.gitignore` ignores `backend-orchestrator/temp_run/` to prevent overwriting Git histories.
   - [ ] Execute `subprocess.run(["docker-compose", "-f", "dynamic_lab.yml", "up", "-d"])` on Deploy.
   - [ ] Ensure clean teardown via `docker-compose down` on Stop to prevent port conflicts.
 - [ ] Automate `.st` Payload Injection via FastAPI HTTP Requests

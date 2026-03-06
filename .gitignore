@@ -11,4 +11,5 @@ dist/
 # Mac System Files
 .DS_Store
 
-
+# TRINETRA Dynamic Docker Output
+backend-orchestrator/temp_run/
