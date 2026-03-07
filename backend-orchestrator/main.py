@@ -12,11 +12,11 @@ app = FastAPI(title="TRINETRA Backend Orchestrator", version="1.0")
 # Global singleton for the simulation engine
 sim_engine = SimulationEngine()
 
-# Enable CORS for the React frontend (running on port 5173)
+# Enable CORS for the React frontend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"], 
-    allow_credentials=True,
+    allow_origins=["*"],  # Allow all origins for local development to prevent preflight errors
+    allow_credentials=False, # Must be False if allow_origins is ["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
