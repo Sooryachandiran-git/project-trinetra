@@ -28,17 +28,30 @@ class DockerManager:
 
         container_name = f"trinetra-ied-{ied_id}"
         
-        # Check if already running
+        # Check if already running — stop and remove stale one to free ports
         try:
             existing = self.client.containers.get(container_name)
-            if existing.status == "running":
-                logger.info(f"IED {ied_id} is already running.")
-                return True
-            else:
-                existing.start()
-                return True
+            logger.info(f"IED {ied_id}: Found stale container, removing to free ports...")
+            try:
+                existing.stop()
+            except Exception:
+                pass
+            existing.remove()
         except docker.errors.NotFound:
             pass
+
+        # Also check for ANY container using the same ports and force-remove them
+        for c in self.client.containers.list(all=True):
+            ports = c.attrs.get('HostConfig', {}).get('PortBindings', {}) or {}
+            bound = [v[0]['HostPort'] for vals in ports.values() if vals for v in [vals]]
+            if str(modbus_port) in bound or str(web_port) in bound:
+                if c.name != container_name:
+                    logger.warning(f"Port conflict: removing container {c.name} which holds port {modbus_port} or {web_port}")
+                    try:
+                        c.stop()
+                        c.remove()
+                    except Exception as e:
+                        logger.error(f"Could not remove conflicting container {c.name}: {e}")
 
         logger.info(f"Launching IED {ied_id} (Web: {web_port}, Modbus: {modbus_port})...")
         try:
