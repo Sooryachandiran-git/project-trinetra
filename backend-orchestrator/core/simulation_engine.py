@@ -8,6 +8,7 @@ from core.modbus_manager import ModbusManager
 from core.docker_manager import DockerManager
 from core.st_generator import STGenerator
 from core.provisioner import Provisioner
+from core.modbus_server import TRINETRAModbusServer
 from api.models import DeploymentPayload
 
 logger = logging.getLogger("SimulationEngine")
@@ -25,6 +26,9 @@ class SimulationEngine:
         self.docker = DockerManager()
         self.st_gen = STGenerator()
         self.prov = Provisioner(self.docker)
+        # Internal Modbus server that OpenPLC polls FROM
+        self.mb_server = TRINETRAModbusServer(port=5502)
+        self.mb_server.start()
         
         self.is_running = False
         self.tick_rate = 0.5  # 500ms target
@@ -149,7 +153,14 @@ class SimulationEngine:
         # 4. WRITE: Update IED sensors (e.g., Bus Voltages)
         if hasattr(self.net, 'res_bus') and not self.net.res_bus.empty:
             voltage = self.net.res_bus.vm_pu.iloc[0]
+            
+            # Write to TRINETRA's own Modbus server (port 5502).
+            # OpenPLC is configured as Slave Device to POLL from this server.
+            # This correctly populates %IW registers in OpenPLC (read-only by PLC, never overwritten).
+            self.mb_server.update_voltage(voltage)
+            self.mb_server.update_coil(0, True)  # grid_online = True
+            
+            # Also write to IED's own registers for backward compatibility
             for ied in self.payload.scada_system.ieds:
-                # Write to register 0 (raw voltage * multiplier for PLC logic)
                 await self.modbus.write_sensor_value(ied.id, 0, voltage)
-                logger.info(f"Cyber Tick: Wrote Voltage {voltage:.4f} pu to IED {ied.id}")
+                logger.info(f"Cyber Tick: Voltage {voltage:.4f} pu → TRINETRA server reg[0]={int(voltage*100)}")
