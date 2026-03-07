@@ -150,5 +150,6 @@ class SimulationEngine:
         if hasattr(self.net, 'res_bus') and not self.net.res_bus.empty:
             voltage = self.net.res_bus.vm_pu.iloc[0]
             for ied in self.payload.scada_system.ieds:
+                # Write to register 0 (raw voltage * multiplier for PLC logic)
                 await self.modbus.write_sensor_value(ied.id, 0, voltage)
                 logger.info(f"Cyber Tick: Wrote Voltage {voltage:.4f} pu to IED {ied.id}")
