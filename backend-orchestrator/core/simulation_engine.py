@@ -175,11 +175,11 @@ class SimulationEngine:
             self.mb_server.update_voltage(voltage)
             self.mb_server.update_coil(0, True)
             
-            # Write Voltage and Current to IED Modbus holding registers (Address 0 and 1)
+            # Write Voltage and Current to IED Modbus holding registers (Address 1024 for %MW0)
             for ied in self.payload.scada_system.ieds:
                 # Write multiple registers: [Voltage, Current]
                 if hasattr(self.modbus, 'clients') and ied.id in self.modbus.clients:
-                    await self.modbus.clients[ied.id].write_registers(address=0, values=[scaled_v, scaled_i], slave=1)
+                    await self.modbus.clients[ied.id].write_registers(address=1024, values=[scaled_v, scaled_i], slave=1)
                 else:
                     logger.warning(f"Could not write V/I to IED {ied.id}: client not found.")
             

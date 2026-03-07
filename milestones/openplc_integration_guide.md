@@ -14,9 +14,12 @@ Modbus has distinct register types. You must use the correct type for the correc
 *   **Holding Registers (`%MW`)**: Used for passing **analog measurements** (Voltage, Current, Power).
     *   *Constraint*: Modbus registers only hold 16-bit Integers (0 to 65535). They **cannot hold floats / decimal numbers**.
     *   *Solution*: Use a "Multiplier Method". If physics output is `230.55V`, Python must multiply it by 100 before writing `23055` to `%MW0`. The ST Logic inside the PLC must be aware that `23000` equals `230V`.
+    
+> [!CAUTION]
+> **CRITICAL OFFSET BUG (`%MW0` != `0`):** In OpenPLC, standard Modbus Holding Registers (`%QW`) start at address `0`. However, internal Memory Words (`%MW`) **start at Modbus address 1024**. If you declare `V_scaled AT %MW0` in your ST code, your external Python Modbus client MUST write telemetry to register `1024`, not `0`! Failure to do so will result in the OpenPLC web dashboard showing the initialized variables properly while your Python Engine writes telemetry data into a black hole.
 *   **Coils (`%QX`)**: Used for reading **digital actions** from the PLC (e.g., opening a breaker).
     *   *Constraint*: Coils hold Booleans (`TRUE` / `FALSE`).
-    *   *Pattern*: Python writes sensor data to `%MW` registers. The OpenPLC ST code evaluates those registers. If a fault is detected, the ST code sets a `%QX` output coil to `TRUE`. Python reads that `%QX` coil and executes the physical switch-opening in Pandapower.
+    *   *Pattern*: Python writes sensor data to `%MW` registers (starting at 1024). The OpenPLC ST code evaluates those registers. If a fault is detected, the ST code sets a `%QX` output coil to `TRUE`. Python reads that `%QX` coil (starting at address 0) and executes the physical switch-opening in Pandapower.
 
 > [!WARNING]
 > **Memory Overlap / Clashes:** You cannot map two different variables in ST code to the same memory location (e.g., `%QX0.0`). If an IED controls multiple breakers, you must assign a unique coil for each (e.g., `%QX0.0`, `%QX0.1`).
