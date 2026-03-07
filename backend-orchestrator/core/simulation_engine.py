@@ -62,16 +62,19 @@ class SimulationEngine:
                 
                 await self.prov.provision_ied(ied.id, st_path, web_port)
             
-        # Wait for containers to be fully up
-        await asyncio.sleep(2) 
-
         # 2. Initialize Pandapower net
         self.net, diagnostics = build_pandapower_network(payload)
         self.mappings = diagnostics.get("mappings", {})
-        
+
         # 3. Connect to all IEDs via Modbus
+        # Provisioning already waited ~22s for PLC compilation + 3s for start.
+        # Give it a few more seconds for the Modbus server to come up.
+        logger.info("Waiting 5s for PLC Modbus servers to become ready...")
+        await asyncio.sleep(5)
+
         for ied in payload.scada_system.ieds:
             await self.modbus.connect_ied(ied.id, "127.0.0.1", ied.port)
+            logger.info(f"Modbus connected to IED {ied.id} on port {ied.port}")
 
         self.is_running = True
         self._task = asyncio.create_task(self._run_loop())
