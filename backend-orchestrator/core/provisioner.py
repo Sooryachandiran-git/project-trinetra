@@ -7,18 +7,21 @@ import subprocess
 
 logger = logging.getLogger("Provisioner")
 
-# The path inside the OpenPLC container where program files live
 CONTAINER_ST_PATH = "/root/OpenPLC_v3/webserver/st_files/blank_program.st"
+COMPILE_SCRIPT = "scripts/compile_program.sh"
+COMPILE_WORKDIR = "/root/OpenPLC_v3/webserver"
 
 class Provisioner:
     """
-    Handles the injection of .st logic into a running OpenPLC container.
+    Handles the injection and compilation of .st logic into a running OpenPLC container.
     
-    Strategy (confirmed working via smoke test):
-    1. Copy our .st file into the container via `docker cp`, overwriting blank_program.st
-    2. Call `reload-program?table_id=1` via HTTP to trigger compilation
-    3. Wait for compilation to complete (~20s)
-    4. Call `start_plc` to start the PLC runtime
+    CONFIRMED WORKING STRATEGY (verified via docker exec + modbus reads):
+    1. docker cp .st file into container
+    2. docker exec <container> bash scripts/compile_program.sh blank_program.st
+       (This correctly runs iec2c + g++ and updates the running openplc binary)
+    3. Login via HTTP and call start_plc to restart the PLC runtime
+    
+    NOTE: reload-program?table_id=1 does NOT recompile. It only reloads the already-compiled binary.
     """
     def __init__(self, docker_manager):
         self.dm = docker_manager
@@ -40,32 +43,22 @@ class Provisioner:
         logger.error("OpenPLC did not start in time.")
         return False
 
-    def _login(self, session: requests.Session, base_url: str, ied_id: str) -> bool:
-        """Login to OpenPLC and return True on success."""
-        try:
-            res = session.post(
-                f"{base_url}/login",
-                data={"username": "openplc", "password": "openplc"},
-                timeout=10,
-                allow_redirects=True
-            )
-            if res.status_code == 200 and "dashboard" in res.text.lower():
-                logger.info(f"IED {ied_id}: Login successful.")
-                return True
-            logger.error(f"IED {ied_id}: Login failed. Status: {res.status_code}")
-            return False
-        except Exception as e:
-            logger.error(f"IED {ied_id}: Login exception: {e}")
-            return False
+    def _docker_exec(self, container_name: str, cmd: str, timeout: int = 60) -> tuple:
+        """Run a command inside the container via docker exec. Returns (returncode, stdout, stderr)."""
+        result = subprocess.run(
+            ["docker", "exec", container_name, "bash", "-c", cmd],
+            capture_output=True, text=True, timeout=timeout
+        )
+        return result.returncode, result.stdout, result.stderr
 
     async def provision_ied(self, ied_id: str, st_path: str, web_port: int) -> bool:
         """
-        Full automated provisioning:
+        Full compilation and provisioning pipeline:
         1. Wait for container web server
         2. Copy ST file into container via docker cp
-        3. Trigger compilation via reload-program?table_id=1
-        4. Wait ~20s for compilation
-        5. Start PLC
+        3. Compile via docker exec + compile_program.sh (CORRECT compile method)
+        4. Login via HTTP
+        5. start_plc to restart the PLC runtime
         """
         base_url = f"http://127.0.0.1:{web_port}"
         container_name = f"trinetra-ied-{ied_id}"
@@ -76,8 +69,8 @@ class Provisioner:
         if not ready:
             return False
 
-        # --- Step 2: Inject ST file via docker cp ---
-        logger.info(f"IED {ied_id}: Injecting ST code into container via docker cp...")
+        # --- Step 2: Copy ST file into container ---
+        logger.info(f"IED {ied_id}: Injecting ST file via docker cp...")
         try:
             result = subprocess.run(
                 ["docker", "cp", st_path, f"{container_name}:{CONTAINER_ST_PATH}"],
@@ -86,47 +79,69 @@ class Provisioner:
             if result.returncode != 0:
                 logger.error(f"IED {ied_id}: docker cp failed: {result.stderr}")
                 return False
-            logger.info(f"IED {ied_id}: ST file injected successfully.")
+            logger.info(f"IED {ied_id}: ST file injected ✓")
         except Exception as e:
             logger.error(f"IED {ied_id}: docker cp exception: {e}")
             return False
 
-        session = requests.Session()
-
-        # --- Step 3: Login ---
-        if not self._login(session, base_url, ied_id):
-            return False
-
-        # --- Step 4: Trigger compilation (reload-program activates the injected file) ---
-        logger.info(f"IED {ied_id}: Triggering compilation via reload-program...")
+        # --- Step 3: Compile via the correct script (confirmed working) ---
+        logger.info(f"IED {ied_id}: Compiling ST code via compile_program.sh (~30s)...")
         try:
-            reload_res = session.get(f"{base_url}/reload-program?table_id=1", timeout=15)
-            logger.info(f"IED {ied_id}: Reload response: {reload_res.status_code}")
+            rc, stdout, stderr = await loop.run_in_executor(
+                None,
+                lambda: self._docker_exec(
+                    container_name,
+                    f"cd {COMPILE_WORKDIR} && bash {COMPILE_SCRIPT} blank_program.st 2>&1",
+                    timeout=120
+                )
+            )
+            if "Compilation finished successfully!" in stdout:
+                logger.info(f"IED {ied_id}: ✅ Compilation successful!")
+                # Log which variables were compiled
+                for line in stdout.split("\n"):
+                    if "varName" in line:
+                        logger.info(f"  {line.strip()}")
+            else:
+                logger.error(f"IED {ied_id}: Compilation may have failed:\n{stdout[-500:]}")
+                return False
         except Exception as e:
-            logger.error(f"IED {ied_id}: reload-program failed: {e}")
+            logger.error(f"IED {ied_id}: Compilation exception: {e}")
             return False
 
-        # --- Step 5: Wait for compilation ---
-        logger.info(f"IED {ied_id}: Compiling logic... (~20 seconds)")
-        await asyncio.sleep(22)
+        # --- Step 4: Login and restart PLC via HTTP ---
+        await asyncio.sleep(2)
+        session = requests.Session()
+        try:
+            login_res = session.post(
+                f"{base_url}/login",
+                data={"username": "openplc", "password": "openplc"},
+                timeout=10, allow_redirects=True
+            )
+            if "dashboard" not in login_res.text.lower():
+                logger.error(f"IED {ied_id}: Login failed.")
+                return False
+            logger.info(f"IED {ied_id}: Logged in ✓")
+        except Exception as e:
+            logger.error(f"IED {ied_id}: Login exception: {e}")
+            return False
 
-        # --- Step 6: Start PLC ---
+        # --- Step 5: Start the PLC (loads the freshly compiled binary) ---
         logger.info(f"IED {ied_id}: Starting PLC Runtime...")
         try:
             start_res = session.get(f"{base_url}/start_plc", timeout=10)
-            logger.info(f"IED {ied_id}: start_plc response: {start_res.status_code}")
+            logger.info(f"IED {ied_id}: start_plc → HTTP {start_res.status_code}")
         except Exception as e:
-            logger.error(f"IED {ied_id}: start_plc failed: {e}")
+            logger.error(f"IED {ied_id}: start_plc exception: {e}")
             return False
 
-        # --- Step 7: Verify ---
+        # --- Step 6: Verify ---
         await asyncio.sleep(3)
         try:
             status_res = session.get(f"{base_url}/dashboard", timeout=10)
             if "running" in status_res.text.lower():
-                logger.info(f"IED {ied_id}: ✅ PLC RUNNING at http://127.0.0.1:{web_port}/dashboard")
+                logger.info(f"IED {ied_id}: ✅ PLC RUNNING → http://127.0.0.1:{web_port}/dashboard")
             else:
-                logger.warning(f"IED {ied_id}: Start sent. Verify at http://127.0.0.1:{web_port}/dashboard")
+                logger.warning(f"IED {ied_id}: PLC started but verify at http://127.0.0.1:{web_port}/dashboard")
         except Exception:
             pass
 
