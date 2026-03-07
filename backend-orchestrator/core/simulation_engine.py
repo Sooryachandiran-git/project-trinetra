@@ -128,19 +128,22 @@ class SimulationEngine:
         
         breaker_statuses = await self.modbus.poll_all_breakers(mappings)
         
-        # 2. SYNC TO PHYSICS: Update Pandapower line states based on breakers
+        # 2. SYNC TO PHYSICS: Update Pandapower line states based on PLC breaker coil outputs
         line_map = self.mappings.get("line_map", {})
         
         for breaker_id, is_closed in breaker_statuses.items():
-            # A breaker (switch node) is OPEN (False) or CLOSED (True).
-            # We find any lines connected to this breaker node.
+            # %QX0.0 = breaker_closed coil. When PLC trips -> False -> line out of service
             for line_node in self.payload.electrical_grid.lines:
                 if line_node.from_node == breaker_id or line_node.to_node == breaker_id:
                     if line_node.id in line_map:
                         line_idx = line_map[line_node.id]
-                        
-                        # Sync state: Breaker Open -> Line out of service
+                        prev_state = self.net.line.at[line_idx, 'in_service']
                         self.net.line.at[line_idx, 'in_service'] = is_closed
+                        if prev_state != is_closed:
+                            if is_closed:
+                                logger.info(f"BREAKER {breaker_id}: RECLOSED -> Line back in service")
+                            else:
+                                logger.warning(f"BREAKER {breaker_id}: TRIPPED (PLC commanded) -> Line out of service -> Voltage = 0")
                         
         # 3. SOLVE: Execute Power Flow
         import pandapower as pp
@@ -150,17 +153,21 @@ class SimulationEngine:
         except Exception as e:
             logger.warning(f"Power flow failed to converge (possibly islanded): {e}")
 
-        # 4. WRITE: Update IED sensors (e.g., Bus Voltages)
+        # 4. WRITE: Update IED sensors and report voltage
         if hasattr(self.net, 'res_bus') and not self.net.res_bus.empty:
             voltage = self.net.res_bus.vm_pu.iloc[0]
             
-            # Write to TRINETRA's own Modbus server (port 5502).
-            # OpenPLC is configured as Slave Device to POLL from this server.
-            # This correctly populates %IW registers in OpenPLC (read-only by PLC, never overwritten).
+            # Write to TRINETRA Modbus server (for Slave Device integration)
             self.mb_server.update_voltage(voltage)
-            self.mb_server.update_coil(0, True)  # grid_online = True
+            self.mb_server.update_coil(0, True)
             
-            # Also write to IED's own registers for backward compatibility
+            # Write to IED Modbus holding registers
             for ied in self.payload.scada_system.ieds:
                 await self.modbus.write_sensor_value(ied.id, 0, voltage)
-                logger.info(f"Cyber Tick: Voltage {voltage:.4f} pu → TRINETRA server reg[0]={int(voltage*100)}")
+            
+            # Report physics state with trip context
+            any_open = any(not v for v in breaker_statuses.values()) if breaker_statuses else False
+            if any_open:
+                logger.warning(f"Physics: Voltage={voltage:.4f} pu [BREAKER TRIPPED - PLC protection relay OPEN]")
+            else:
+                logger.info(f"Physics: Voltage={voltage:.4f} pu | Breaker CLOSED | Grid Normal")
