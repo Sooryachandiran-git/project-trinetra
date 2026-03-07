@@ -56,3 +56,9 @@ async def stop_simulation():
     """Stops the background Cyber-Physical Tick loop."""
     await sim_engine.stop()
     return {"status": "success", "message": "Simulation stopped."}
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Ensure background loops and Modbus servers are closed on exit."""
+    print("Shutting down TRINETRA Physics Engine gracefully...")
+    await sim_engine.stop()

@@ -55,13 +55,13 @@ class SimulationEngine:
                     if m.ied_id == ied.id
                 ]
                 
-                # Check for custom ST code from the UI
                 if ied.st_code:
-                    logger.info(f"IED {ied.id}: Using custom ST code from UI.")
-                    st_path = os.path.join(self.st_gen.output_dir, f"ied_{ied.id}_custom.st")
+                    logger.info(f"IED {ied.id}: Using custom ST code from payload.")
+                    st_path = os.path.join("/tmp", f"ied_{ied.id}_custom.st")
                     with open(st_path, "w") as f:
                         f.write(ied.st_code)
                 else:
+                    logger.info(f"IED {ied.id}: Falling back to dynamically generated ST code.")
                     st_path = self.st_gen.generate_st(ied.id, controlled_breakers)
                 
                 await self.prov.provision_ied(ied.id, st_path, web_port)
@@ -89,13 +89,16 @@ class SimulationEngine:
         self.is_running = False
         if self._task:
             self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
-        
+            self._task = None
+            
         await self.modbus.disconnect_all()
-        self.docker.stop_all_ieds()
+        
+        # Stop internal Modbus Server so port 5502 is freed
+        self.mb_server.stop()
+        
+        # Stop IED containers asynchronously
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.docker.stop_all_ieds)
         
         self.net = None
         self.payload = None
@@ -128,22 +131,24 @@ class SimulationEngine:
         
         breaker_statuses = await self.modbus.poll_all_breakers(mappings)
         
-        # 2. SYNC TO PHYSICS: Update Pandapower line states based on PLC breaker coil outputs
-        line_map = self.mappings.get("line_map", {})
+        # 2. SYNC TO PHYSICS: Update Pandapower switch states based on PLC breaker coil outputs
+        switch_map = self.mappings.get("switch_map", {})
         
-        for breaker_id, is_closed in breaker_statuses.items():
-            # %QX0.0 = breaker_closed coil. When PLC trips -> False -> line out of service
-            for line_node in self.payload.electrical_grid.lines:
-                if line_node.from_node == breaker_id or line_node.to_node == breaker_id:
-                    if line_node.id in line_map:
-                        line_idx = line_map[line_node.id]
-                        prev_state = self.net.line.at[line_idx, 'in_service']
-                        self.net.line.at[line_idx, 'in_service'] = is_closed
-                        if prev_state != is_closed:
-                            if is_closed:
-                                logger.info(f"BREAKER {breaker_id}: RECLOSED -> Line back in service")
-                            else:
-                                logger.warning(f"BREAKER {breaker_id}: TRIPPED (PLC commanded) -> Line out of service -> Voltage = 0")
+        for breaker_id, trip_command_active in breaker_statuses.items():
+            # In the user's ST code, %QX0.0 is 'Trip_Command'.
+            # If TRUE -> the breaker should OPEN. If FALSE -> the breaker should CLOSE.
+            is_closed = not trip_command_active
+            
+            if breaker_id in switch_map:
+                switch_idx = switch_map[breaker_id]
+                prev_state = self.net.switch.at[switch_idx, 'closed']
+                self.net.switch.at[switch_idx, 'closed'] = is_closed
+                
+                if prev_state != is_closed:
+                    if is_closed:
+                        logger.info(f"BREAKER {breaker_id}: RECLOSED -> Switch closed -> Flow restored")
+                    else:
+                        logger.warning(f"BREAKER {breaker_id}: TRIPPED (PLC commanded) -> Switch open -> Flow severed")
                         
         # 3. SOLVE: Execute Power Flow
         import pandapower as pp
@@ -155,18 +160,31 @@ class SimulationEngine:
 
         # 4. WRITE: Update IED sensors and report voltage
         if hasattr(self.net, 'res_bus') and not self.net.res_bus.empty:
-            voltage = self.net.res_bus.vm_pu.iloc[0]
+            voltage = self.net.res_bus.vm_pu.iloc[0] * 230  # Actual Voltage (e.g., 230V)
+            
+            # Get current from the first line (if exists), else default to safe value
+            current = 15.20 
+            if hasattr(self.net, 'res_line') and not self.net.res_line.empty:
+                current = self.net.res_line.i_ka.iloc[0] * 1000 # Actual Current in Amps
+                
+            # Scale up to remove decimals for Modbus 16-bit Integer
+            scaled_v = int(voltage * 100)
+            scaled_i = int(current * 100)
             
             # Write to TRINETRA Modbus server (for Slave Device integration)
             self.mb_server.update_voltage(voltage)
             self.mb_server.update_coil(0, True)
             
-            # Write to IED Modbus holding registers
+            # Write Voltage and Current to IED Modbus holding registers (Address 0 and 1)
             for ied in self.payload.scada_system.ieds:
-                await self.modbus.write_sensor_value(ied.id, 0, voltage)
+                # Write multiple registers: [Voltage, Current]
+                if hasattr(self.modbus, 'clients') and ied.id in self.modbus.clients:
+                    await self.modbus.clients[ied.id].write_registers(address=0, values=[scaled_v, scaled_i], slave=1)
+                else:
+                    logger.warning(f"Could not write V/I to IED {ied.id}: client not found.")
             
             # Report physics state with trip context
-            any_open = any(not v for v in breaker_statuses.values()) if breaker_statuses else False
+            any_open = any(v for v in breaker_statuses.values()) if breaker_statuses else False
             if any_open:
                 logger.warning(f"Physics: Voltage={voltage:.4f} pu [BREAKER TRIPPED - PLC protection relay OPEN]")
             else:

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Optional
 
 # --- ELECTRICAL GRID MODELS ---
 
@@ -49,7 +49,7 @@ class IEDModel(BaseModel):
     name: str = "IED"
     port: int
     num_breakers: int = 1
-    st_code: str = None
+    st_code: Optional[str] = None
     protocols: List[str]
 
 class ControlMappingModel(BaseModel):

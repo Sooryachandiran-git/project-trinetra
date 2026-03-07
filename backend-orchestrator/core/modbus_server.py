@@ -66,3 +66,14 @@ class TRINETRAModbusServer:
         self._thread = threading.Thread(target=run, daemon=True)
         self._thread.start()
         logger.info(f"Modbus Server thread started on port {self.port}")
+
+    def stop(self):
+        """Gracefully stop the Modbus TCP server."""
+        try:
+            from pymodbus.server import ServerStop
+            ServerStop()
+            if self._thread and self._thread.is_alive():
+                self._thread.join(timeout=2.0)
+            logger.info(f"TRINETRA Modbus Server stopped on port {self.port}")
+        except Exception as e:
+            logger.error(f"Error stopping Modbus Server: {e}")
