@@ -13,14 +13,15 @@ class STGenerator:
         """
         Generates protection relay ST code.
         - Dynamically creates Modbus Coils (%QX) for every controlled breaker.
-        - Compares scaled voltage from Pandapower against a 250V threshold.
+        - Compares scaled voltage_pu from Pandapower against a 1.10 pu threshold (1100).
         - Trips ALL assigned breakers if overvoltage is detected.
         """
-        # 1. Generate Variable Declarations (Dynamically map to %QX0.0, %QX0.1, etc.)
-        breaker_decls = ""
         for i, b_id in enumerate(controlled_breakers):
             safe_name = b_id.replace('-', '_').replace('.', '_')
             breaker_decls += f"    Trip_Cmd_{safe_name} AT %QX0.{i} : BOOL := FALSE;\n"
+        
+        # Add Reset Coil (Always on %QX0.7 for consistency)
+        breaker_decls += "    Reset_Cmd AT %QX0.7 : BOOL := FALSE;\n"
 
         # 2. Generate the Tripping Action (Setting coils to TRUE)
         trip_actions = ""
@@ -38,30 +39,42 @@ class STGenerator:
         st_content = f"""\
 PROGRAM trinetra_ied_{ied_id.replace('-','_').replace('.','_')}
   VAR
-    (* Input Registers received from Pandapower Physics Engine via Modbus *)
-    V_scaled          AT %MW0 : UINT := 23000;  (* Voltage * 100 *)
-    I_scaled          AT %MW1 : UINT := 1520;   (* Current * 100 *)
+    (* Input Registers: Physics Telemetry *)
+    V_scaled AT %MW0 : UINT := 1000;
+    I_scaled AT %MW1 : UINT := 250;
 
-    (* Custom Diagnostic Variables *)
-    scan_count        AT %QW24 : INT := 0;     
+    (* Diagnostic Counter *)
+    scan_count AT %QW24 : INT := 0;
     
-    (* Dynamic Output Coils (Read by Python Backend) *)
+    (* Output Coils for Breakers *)
 {breaker_decls}
   END_VAR
 
-  (* Scan Counter - Proves the logic is executing *)
+  VAR
+    (* Internal Latching Logic (Non-located) *)
+    fault_state : BOOL := FALSE;
+  END_VAR
+
+  (* Scan Counter *)
   IF scan_count >= 32767 THEN
     scan_count := 0;
   ELSE
     scan_count := scan_count + 1;
   END_IF;
 
-  (* Overvoltage Protection Logic (Threshold: 250V) *)
-  IF V_scaled > 25000 THEN
-    (* FAULT DETECTED: Trip all assigned breakers *)
+  (* Latching Protection Logic *)
+  IF V_scaled > 1100 THEN
+    fault_state := TRUE;
+  END_IF;
+
+  IF Reset_Cmd THEN
+    fault_state := FALSE;
+  END_IF;
+
+  (* Drive Breakers *)
+  IF fault_state THEN
 {trip_actions}
   ELSE
-    (* GRID NORMAL: Keep breakers closed *)
 {normal_actions}
   END_IF;
 

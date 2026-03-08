@@ -2,8 +2,17 @@ import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Server } from 'lucide-react';
 
-const IEDNode = ({ data, isConnectable }) => {
-  const isOnline = data.comms_status !== 0;
+import useGridStore from '../../store/useGridStore';
+
+const IEDNode = ({ id, data, isConnectable }) => {
+  const { isRunMode, liveTelemetry } = useGridStore();
+  
+  let isOnline = data.comms_status !== 0;
+
+  if (isRunMode && liveTelemetry?.ied_health) {
+    // Update live health from Modbus TCP connection state
+    isOnline = liveTelemetry.ied_health[id] !== false;
+  }
 
   return (
     <div className={`px-4 py-3 shadow-md rounded-md bg-slate-900 border-2 min-w-[200px] transition-colors ${isOnline ? 'border-slate-700' : 'border-amber-500'}`}>

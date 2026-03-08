@@ -133,3 +133,33 @@ Physics: Voltage=0.0000 pu [BREAKER TRIPPED - PLC protection relay OPEN]
 ```
 
 Congratulations. You have successfully simulated a cyber-induced physical outage.
+
+---
+
+## Part 6: Understanding the Physics of the Blackout
+
+What exactly happens when the attack is completed? Does Pandapower just start producing universal 0 values? 
+
+**No.** Only the specific Bus *after* the breaker (and everything connected to it) becomes `0V`. Here is exactly how the physics engine handles the attack and why it behaves this way.
+
+**The Physics of the Blackout**
+Let's look at the topology we built: `External Feeder -> Bus 1 -> Breaker -> Bus 2 -> Load`.
+
+When the OpenPLC `.st` code sets the `Trip_Command` to `TRUE` because of the cyber-attack, the FastAPI Python script receives that signal and tells Pandapower to physically **open the breaker** in the mathematical model.
+
+Because Pandapower mathematically simulates real electricity, here is exactly what it calculates on the very next 500ms tick:
+
+1. **Bus 1 (The Source Side):** Because Bus 1 is still physically connected to the External Feeder, it remains fully energized. Pandapower will calculate that Bus 1 is still ~230kV.
+2. **The Breaker:** The electrical bridge is now severed. Current flowing through the breaker drops to 0 Amps.
+3. **Bus 2 (The Load Side):** Because the breaker is open, Bus 2 is now completely isolated from the power source. Pandapower calculates that Bus 2 voltage drops to 0V.
+4. **The Load:** Because Bus 2 is at 0V, the load cannot draw any power. Pandapower calculates the load current is 0 Amps.
+
+**Why this makes the Digital Twin realistic:**
+If the Python engine just lazily said "The grid was attacked, output 0 for everything," the simulation would be scientifically invalid. 
+
+Instead, if a hacker only attacks IED 1 and trips Breaker 1, but leaves the rest of the network alone, Pandapower will correctly calculate a **partial blackout**. The specific consumers attached to the line after Breaker 1 will see 0 voltage, but the rest of the virtual city attached to other lines will stay perfectly powered.
+
+**How this flows to the UI:**
+* **The Python Read:** FastAPI reads the new Pandapower results. It sees Bus 1 = 23000 (scaled) and Bus 2 = 0.
+* **The Modbus Write:** FastAPI writes 23000 to Modbus registers for sensors looking at Bus 1, and 0 to sensors looking at Bus 2.
+* **The HMI UI:** On the React dashboard, the wire representing Bus 1 will stay glowing Green (Energized), while the wire for Bus 2 and the Load icon will instantly turn Gray or Red (De-energized).

@@ -10,6 +10,13 @@ const useGridStore = create((set, get) => ({
   edges: [],
   isModalOpen: false,
   selectedNodeId: null,
+  isRunMode: false,
+  activeView: 'topology',
+  liveTelemetry: null,
+
+  setRunMode: (status) => set({ isRunMode: status, activeView: 'topology' }),
+  setActiveView: (view) => set({ activeView: view }),
+  setLiveTelemetry: (data) => set({ liveTelemetry: data }),
 
   openModal: (nodeId) => set({ isModalOpen: true, selectedNodeId: nodeId }),
   closeModal: () => set({ isModalOpen: false, selectedNodeId: null }),
@@ -25,8 +32,26 @@ const useGridStore = create((set, get) => ({
     });
   },
   onConnect: (connection) => {
+    const state = get();
+    const sourceNode = state.nodes.find(n => n.id === connection.source);
+    const targetNode = state.nodes.find(n => n.id === connection.target);
+    
+    // Check if this is a cyber control link (between IED and Breaker)
+    const isCyberControl = 
+        (sourceNode?.type === 'ied' && targetNode?.type === 'breaker') ||
+        (sourceNode?.type === 'breaker' && targetNode?.type === 'ied');
+        
+    const newEdge = {
+        ...connection,
+        type: 'smoothstep',
+        style: isCyberControl 
+            ? { stroke: '#3b82f6', strokeWidth: 2, strokeDasharray: '5,5' } // Cyber: Dashed blue
+            : { stroke: '#0f172a', strokeWidth: 3 }, // Physics: Thick solid black
+        animated: isCyberControl // Optional: animate control logic
+    };
+
     set({
-      edges: addEdge(connection, get().edges),
+      edges: addEdge(newEdge, state.edges),
     });
   },
   onNodesDelete: (deleted) => {

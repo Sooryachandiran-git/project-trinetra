@@ -34,6 +34,13 @@ class SimulationEngine:
         self.tick_rate = 0.5  # 500ms target
         self._task: Optional[asyncio.Task] = None
         self.mappings = {}
+        self.current_state = {
+            "status": "offline",
+            "voltage": 0.0,
+            "current": 0.0,
+            "breakers": {},
+            "ied_health": {}
+        }
 
     async def start(self, payload: DeploymentPayload):
         """Initialize containers, provision logic, and start the polling loop."""
@@ -71,14 +78,13 @@ class SimulationEngine:
         self.mappings = diagnostics.get("mappings", {})
 
         # 3. Connect to all IEDs via Modbus
-        # Provisioning already waited ~22s for PLC compilation + 3s for start.
-        # Give it a few more seconds for the Modbus server to come up.
-        logger.info("Waiting 5s for PLC Modbus servers to become ready...")
-        await asyncio.sleep(5)
+        if payload.scada_system.ieds:
+            logger.info("Waiting 5s for PLC Modbus servers to become ready...")
+            await asyncio.sleep(5)
 
-        for ied in payload.scada_system.ieds:
-            await self.modbus.connect_ied(ied.id, "127.0.0.1", ied.port)
-            logger.info(f"Modbus connected to IED {ied.id} on port {ied.port}")
+            for ied in payload.scada_system.ieds:
+                await self.modbus.connect_ied(ied.id, "127.0.0.1", ied.port)
+                logger.info(f"Modbus connected to IED {ied.id} on port {ied.port}")
 
         self.is_running = True
         self._task = asyncio.create_task(self._run_loop())
@@ -160,32 +166,60 @@ class SimulationEngine:
 
         # 4. WRITE: Update IED sensors and report voltage
         if hasattr(self.net, 'res_bus') and not self.net.res_bus.empty:
-            voltage = self.net.res_bus.vm_pu.iloc[0] * 230  # Actual Voltage (e.g., 230V)
+            # 1. Gather true base values
+            vm_pu = float(self.net.res_bus.vm_pu.iloc[0])
+            vn_kv = float(self.net.bus.vn_kv.iloc[0])
             
-            # Get current from the first line (if exists), else default to safe value
-            current = 15.20 
+            # 2. Get mathematically accurate Current (kA)
+            current_ka = 0.0 
             if hasattr(self.net, 'res_line') and not self.net.res_line.empty:
-                current = self.net.res_line.i_ka.iloc[0] * 1000 # Actual Current in Amps
+                current_ka = float(self.net.res_line.i_ka.iloc[0])
+            elif hasattr(self.net, 'res_ext_grid') and not self.net.res_ext_grid.empty:
+                # If there are no transmission lines (Ext Grid attached directly to Bus with Load)
+                # Calculate current from S_mva draw
+                p_mw = abs(float(self.net.res_ext_grid.p_mw.iloc[0]))
+                q_mvar = abs(float(self.net.res_ext_grid.q_mvar.iloc[0]))
+                s_mva = (p_mw**2 + q_mvar**2)**0.5
+                v_mag = 1.732 * vn_kv * vm_pu
+                current_ka = s_mva / v_mag if v_mag > 0 else 0.0
                 
-            # Scale up to remove decimals for Modbus 16-bit Integer
-            scaled_v = int(voltage * 100)
-            scaled_i = int(current * 100)
+            # 3. Scale up to integers for Modbus format
+            scaled_v = int(vm_pu * 1000) # e.g. 1.0 pu -> 1000 (meaning 100.0%)
+            scaled_i = int(current_ka * 1000) # e.g. 0.25 kA -> 250 A
             
-            # Write to TRINETRA Modbus server (for Slave Device integration)
-            self.mb_server.update_voltage(voltage)
+            self.mb_server.update_voltage(vm_pu)
             self.mb_server.update_coil(0, True)
             
-            # Write Voltage and Current to IED Modbus holding registers (Address 1024 for %MW0)
+            # Write Physics to IED Modbus memory
             for ied in self.payload.scada_system.ieds:
-                # Write multiple registers: [Voltage, Current]
                 if hasattr(self.modbus, 'clients') and ied.id in self.modbus.clients:
                     await self.modbus.clients[ied.id].write_registers(address=1024, values=[scaled_v, scaled_i], slave=1)
                 else:
                     logger.warning(f"Could not write V/I to IED {ied.id}: client not found.")
             
-            # Report physics state with trip context
+            # 5. Clean Console Telemetry Reporting
+            breaker_count = len(self.net.switch) if hasattr(self.net, 'switch') else 0
             any_open = any(v for v in breaker_statuses.values()) if breaker_statuses else False
+            
+            log_str = f"Physics: V={vm_pu:.4f} pu, I={current_ka:.4f} kA | Breakers: {breaker_count} (Tripped: {sum(v for v in breaker_statuses.values())})"
             if any_open:
-                logger.warning(f"Physics: Voltage={voltage:.4f} pu [BREAKER TRIPPED - PLC protection relay OPEN]")
+                logger.warning(f"{log_str} [GRID FAULT - RELAY TRIPPED]")
             else:
-                logger.info(f"Physics: Voltage={voltage:.4f} pu | Breaker CLOSED | Grid Normal")
+                logger.info(f"{log_str} [GRID NOMINAL]")
+            
+            # 6. Save the global state for the React SSE Telemetry Stream
+            ied_health = {}
+            for ied in self.payload.scada_system.ieds:
+                if hasattr(self.modbus, 'clients') and ied.id in self.modbus.clients:
+                    ied_health[ied.id] = self.modbus.clients[ied.id].connected
+                else:
+                    ied_health[ied.id] = False
+
+            self.current_state = {
+                "status": "running" if self.is_running else "offline",
+                "voltage_pu": round(vm_pu, 4),
+                "voltage_kv": round(vm_pu * vn_kv, 2),
+                "current_ka": round(current_ka, 4),
+                "breakers": breaker_statuses,
+                "ied_health": ied_health
+            }

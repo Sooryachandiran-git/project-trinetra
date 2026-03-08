@@ -2,9 +2,20 @@ import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Power } from 'lucide-react';
 
-const BreakerNode = ({ data, isConnectable }) => {
+import useGridStore from '../../store/useGridStore';
+
+const BreakerNode = ({ id, data, isConnectable }) => {
+  const { isRunMode, liveTelemetry } = useGridStore();
+  
+  // Base logic uses the static data layout if we are not running
   const currentStatus = data.status || 'Closed';
-  const isClosed = currentStatus === 1 || currentStatus === 'Closed';
+  let isClosed = currentStatus === 1 || currentStatus === 'Closed';
+  
+  // Live override if running
+  if (isRunMode && liveTelemetry && liveTelemetry.breakers && liveTelemetry.breakers[id] !== undefined) {
+    // liveTelemetry.breakers[id] is True if breaker is OPEN in pandapower context
+    isClosed = !liveTelemetry.breakers[id];
+  }
 
   return (
     <div className={`px-4 py-2 shadow-sm rounded-md bg-white border-2 min-w-[160px] transition-colors ${isClosed ? 'border-emerald-500' : 'border-rose-500'}`}>

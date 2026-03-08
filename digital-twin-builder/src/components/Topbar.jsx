@@ -2,10 +2,11 @@ import React, { useRef, useState } from 'react';
 import { Save, Upload, Play, Loader2 } from 'lucide-react';
 import useGridStore from '../store/useGridStore';
 import { compileGridToJSON } from '../utils/jsonBuilder';
-import { sendDeployPayload } from '../services/api';
+import { sendDeployPayload, sendStopSimulation } from '../services/api';
+import { Square, Activity, LayoutTemplate } from 'lucide-react';
 
 const Topbar = () => {
-  const { nodes, edges, loadGrid } = useGridStore();
+  const { nodes, edges, loadGrid, isRunMode, setRunMode, setLiveTelemetry, activeView, setActiveView } = useGridStore();
   const [isDeploying, setIsDeploying] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -81,13 +82,23 @@ const Topbar = () => {
         resultStats = `Simulation Failed to Converge: ${results.reason || results.error || "Unknown Error"}`;
       }
 
-      alert(`Architecture Deployed Successfully!\n\n${resultStats}\n\nExecution Time: ${response.execution_time_ms}ms`);
-      console.log("Diagnostics:", response.diagnostics);
+      // If successful, enter run mode
+      setRunMode(true);
       
     } catch (error) {
       alert(`Deployment Failed:\n\n${error.message}`);
     } finally {
       setIsDeploying(false);
+    }
+  };
+
+  const handleStop = async () => {
+    try {
+      await sendStopSimulation();
+      setRunMode(false);
+      setLiveTelemetry(null);
+    } catch (error) {
+      alert(`Stop Failed:\n\n${error.message}`);
     }
   };
 
@@ -97,41 +108,76 @@ const Topbar = () => {
         <h1 className="font-semibold text-slate-800 text-lg tracking-tight">TRINETRA Builder</h1>
       </div>
 
+      {isRunMode && (
+        <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <button 
+            onClick={() => setActiveView('topology')}
+            className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
+              activeView === 'topology' 
+                ? 'bg-white text-blue-600 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <LayoutTemplate size={16} />
+            <span>Topology SLD</span>
+          </button>
+          <button 
+            onClick={() => setActiveView('control_room')}
+            className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
+              activeView === 'control_room' 
+                ? 'bg-slate-800 text-emerald-400 shadow-sm' 
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Activity size={16} />
+            <span>Control Room</span>
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center space-x-4">
-        {/* Hidden file input for loading JSON */}
-        <input
-          type="file"
-          accept=".json"
-          ref={fileInputRef}
-          onChange={handleFileChange}
-          className="hidden"
-        />
-
-        <button 
-          onClick={handleLoadClick}
-          className="flex items-center space-x-2 px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium rounded-lg transition-colors border border-slate-200"
-        >
-          <Upload size={18} />
-          <span>Load</span>
-        </button>
-
-        <button 
-          onClick={handleSave}
-          className="flex items-center space-x-2 px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium rounded-lg transition-colors border border-slate-200"
-        >
-          <Save size={18} />
-          <span>Save</span>
-        </button>
-
-        <div className="w-px h-6 bg-slate-200 mx-2"></div>
-
-        <button 
-          onClick={handleDeploy}
-          className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg shadow-sm transition-colors"
-        >
-          <Play size={18} fill="currentColor" />
-          <span>Deploy</span>
-        </button>
+        {!isRunMode ? (
+          <>
+            <input
+              type="file"
+              accept=".json"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              className="hidden"
+            />
+            <button 
+              onClick={handleLoadClick}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium rounded-lg transition-colors border border-slate-200"
+            >
+              <Upload size={18} />
+              <span>Load</span>
+            </button>
+            <button 
+              onClick={handleSave}
+              className="flex items-center space-x-2 px-4 py-2 bg-slate-50 text-slate-700 hover:bg-slate-100 hover:text-slate-900 font-medium rounded-lg transition-colors border border-slate-200"
+            >
+              <Save size={18} />
+              <span>Save</span>
+            </button>
+            <div className="w-px h-6 bg-slate-200 mx-2"></div>
+            <button 
+              onClick={handleDeploy}
+              disabled={isDeploying}
+              className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            >
+              {isDeploying ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}
+              <span>{isDeploying ? 'Deploying...' : 'Deploy'}</span>
+            </button>
+          </>
+        ) : (
+          <button 
+            onClick={handleStop}
+            className="flex items-center space-x-2 px-5 py-2 bg-red-600 text-white hover:bg-red-700 font-medium rounded-lg shadow-sm transition-colors"
+          >
+            <Square size={18} fill="currentColor" />
+            <span>Stop Simulation</span>
+          </button>
+        )}
       </div>
     </div>
   );

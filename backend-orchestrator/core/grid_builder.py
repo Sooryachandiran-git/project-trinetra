@@ -1,28 +1,28 @@
 import pandapower as pp
 import logging
-from api.models import DeploymentPayload, LineModel, BusModel, SwitchModel, LoadModel, ExtGridModel
-from typing import Dict, Any, List, Optional
+from api.models import DeploymentPayload
+from typing import Dict, Any, Optional
 
-# Set up detailed logging for the physics engine
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger("PandapowerCore")
 
 def build_pandapower_network(payload: DeploymentPayload):
     """
-    Takes the purely topographical Pydantic payload from React Flow and translates it 
-    into a live Pandapower network for physical emulation.
+    Translates the visual graph into a strict Pandapower physical network.
+    Enforces:
+    - All components (Load, ExtGrid) MUST plug into a Bus.
+    - Breakers (Switches) MUST sit between two Buses.
     """
-    logger.info("Initializing empty Pandapower network structure.")
+    logger.info("Initializing strict physics Pandapower network structure.")
     net = pp.create_empty_network()
     
-    # Map React Flow UUIDs to Pandapower integer IDs
     bus_map: Dict[str, int] = {}
+    switch_map: Dict[str, int] = {}
     
-    diagnostics: Dict[str, Any] = {
+    diagnostics = {
         "buses_created": 0,
         "ext_grids_created": 0,
         "loads_created": 0,
-        "lines_created": 0,
         "switches_created": 0,
         "errors": []
     }
@@ -34,96 +34,80 @@ def build_pandapower_network(payload: DeploymentPayload):
             bus_map[bus.id] = pp_bus_id
             diagnostics["buses_created"] += 1
 
-        # HELPER: Find the nearest Bus ID for any given node UUID by traversing edges
-        def find_nearest_bus(node_id: str, visited: Optional[set] = None) -> Optional[int]:
-            if visited is None: visited = set()
-            if node_id in bus_map: return bus_map[node_id]
-            if node_id in visited: return None
-            visited.add(node_id)
-            
-            # Search through the grid topography (edges represented as lines in our model)
+        # HELPER: Find exactly which Bus a node is physically wired to.
+        # We only traverse pure edges (which are represented as 'generic_line' in the payload).
+        # We DO NOT traverse through Switches. A Switch separates two buses.
+        def find_bus_for_component(node_id: str) -> Optional[int]:
             for line in payload.electrical_grid.lines:
+                target_id = None
                 if line.from_node == node_id:
-                    res = find_nearest_bus(line.to_node, visited)
-                    if res is not None: return res
-                if line.to_node == node_id:
-                    res = find_nearest_bus(line.from_node, visited)
-                    if res is not None: return res
-            
-            # Also check through switches (breakers) to find a connected bus
-            for sw in payload.electrical_grid.switches:
-                # This is a bit complex as switches aren't 'edges' but 'nodes'
-                # In our React Flow, a switch is a node with an incoming and outgoing edge.
-                # So the recursive search through lines already covers the 'path'
-                pass
+                    target_id = line.to_node
+                elif line.to_node == node_id:
+                    target_id = line.from_node
 
+                if target_id is not None:
+                    if target_id in bus_map:
+                        return bus_map[target_id]
             return None
 
-        # 2. Create External Grids
+        # 2. Create External Grids -> attach to Bus
         for ext in payload.electrical_grid.ext_grids:
-            bus_id = find_nearest_bus(ext.id)
+            bus_id = find_bus_for_component(ext.id)
             if bus_id is not None:
                 pp.create_ext_grid(net, bus=bus_id, vm_pu=ext.vm_pu, va_degree=ext.va_degree, name=ext.name)
                 diagnostics["ext_grids_created"] += 1
             else:
-                diagnostics["errors"].append(f"External Grid {ext.name} is not connected to a Bus.")
+                diagnostics["errors"].append(f"External Grid {ext.name} MUST be connected to a Bus.")
 
-        # 3. Create Loads
+        # 3. Create Loads -> attach to Bus
         for load in payload.electrical_grid.loads:
-            bus_id = find_nearest_bus(load.id)
+            bus_id = find_bus_for_component(load.id)
             if bus_id is not None:
                 pp.create_load(net, bus=bus_id, p_mw=load.p_mw, q_mvar=load.q_mvar, name=load.name)
                 diagnostics["loads_created"] += 1
             else:
-                diagnostics["errors"].append(f"Load {load.name} is not connected to a Bus.")
+                diagnostics["errors"].append(f"Load {load.name} MUST be connected to a Bus.")
 
-        # 4. Create Physical Lines (Transmission Lines)
-        line_map: Dict[str, int] = {}
-        for line_node in payload.electrical_grid.lines:
-            bus_a = find_nearest_bus(line_node.from_node)
-            bus_b = find_nearest_bus(line_node.to_node)
-            
-            if bus_a is not None and bus_b is not None and bus_a != bus_b:
-                pp_line_id = pp.create_line_from_parameters(
-                    net, from_bus=bus_a, to_bus=bus_b, 
-                    length_km=line_node.length_km,
-                    r_ohm_per_km=line_node.r_ohm_per_km,
-                    x_ohm_per_km=line_node.x_ohm_per_km,
-                    c_nf_per_km=0, max_i_ka=1,
-                    name=line_node.name
-                )
-                line_map[line_node.id] = pp_line_id
-                diagnostics["lines_created"] += 1
-
-        # 5. Create Switches (Breaker isolation logic)
+        # 4. Create True Mathematical Switches (bus-to-bus)
         for sw in payload.electrical_grid.switches:
-            if sw.initial_status == 'Open':
-                # Find any physical lines directly connected to this switch and trip them
-                for line_node in payload.electrical_grid.lines:
-                    if line_node.from_node == sw.id or line_node.to_node == sw.id:
-                        if line_node.id in line_map:
-                            line_idx = line_map[line_node.id]
-                            net.line.at[line_idx, 'in_service'] = False
-                            logger.info(f"Breaker {sw.name} is OPEN. Isolating segment {line_node.name}.")
-            diagnostics["switches_created"] += 1
-
-        # --- EXECUTE POWER FLOW ---
-        if diagnostics["buses_created"] > 0 and diagnostics["ext_grids_created"] > 0:
-            logger.info("Executing Newton-Raphson power flow simulation...")
-            pp.runpp(net)
+            # A switch must connect exactly two buses. Find both.
+            connected_buses = []
+            for line in payload.electrical_grid.lines:
+                if line.from_node == sw.id:
+                    connected_buses.append(find_bus_for_component(line.to_node) or (bus_map.get(line.to_node)))
+                elif line.to_node == sw.id:
+                    connected_buses.append(find_bus_for_component(line.from_node) or (bus_map.get(line.from_node)))
             
-            # Format results and MAPPINGS for the simulation engine
+            # Filter nones
+            connected_buses = [b for b in connected_buses if b is not None]
+            
+            if len(connected_buses) >= 2:
+                bus_a, bus_b = connected_buses[0], connected_buses[1]
+                if bus_a != bus_b:
+                    is_closed = (sw.initial_status == 'Closed')
+                    # Create actual Pandapower switch
+                    pp_sw_id = pp.create_switch(net, bus=bus_a, element=bus_b, et="b", closed=is_closed, name=sw.name)
+                    switch_map[sw.id] = pp_sw_id
+                    diagnostics["switches_created"] += 1
+            else:
+                diagnostics["errors"].append(f"Breaker {sw.name} MUST sit between two Buses geographically.")
+
+        # --- EXECUTE INITIAL POWER FLOW ---
+        if diagnostics["buses_created"] > 0 and diagnostics["ext_grids_created"] > 0:
+            logger.info("Executing initial Newton-Raphson power flow simulation...")
+            try:
+                pp.runpp(net)
+                diagnostics["results"] = {"converged": True}
+            except Exception as e:
+                diagnostics["results"] = {"converged": False, "reason": str(e)}
+            
+            # Format MAPPINGS for the simulation engine
             diagnostics["mappings"] = {
                 "bus_map": bus_map,
-                "line_map": line_map
-            }
-            diagnostics["results"] = {
-                "bus_voltages_pu": net.res_bus.vm_pu.to_dict(),
-                "bus_names": net.bus.name.to_dict(),
-                "converged": True if hasattr(net, 'res_bus') else False
+                "switch_map": switch_map
             }
         else:
-            diagnostics["results"] = {"converged": False, "reason": "No power source found in the circuit."}
+            diagnostics["results"] = {"converged": False, "reason": "No valid power source attached to a bus."}
 
     except Exception as e:
         logger.error(f"Pandapower error: {str(e)}")

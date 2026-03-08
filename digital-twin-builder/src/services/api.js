@@ -27,3 +27,23 @@ export const sendDeployPayload = async (jsonPayload) => {
     throw error;
   }
 };
+
+export const sendStopSimulation = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/stop`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to stop simulation');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};

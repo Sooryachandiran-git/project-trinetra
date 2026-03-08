@@ -10,9 +10,13 @@ const NodePropertyModal = () => {
 
   // Initialize form data when a new node is selected
   useEffect(() => {
+    let timeoutId;
     if (node && isModalOpen) {
-      setFormData({ ...node.data });
+      timeoutId = setTimeout(() => {
+        setFormData({ ...node.data });
+      }, 0);
     }
+    return () => clearTimeout(timeoutId);
   }, [node, isModalOpen]);
 
   if (!isModalOpen || !node) return null;

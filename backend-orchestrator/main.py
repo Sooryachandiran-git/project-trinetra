@@ -4,10 +4,17 @@ import time
 
 # Internal imports
 from api.models import DeploymentPayload
+from api.telemetry_stream import router as stream_router
 from core.grid_builder import build_pandapower_network
 from core.simulation_engine import SimulationEngine
 
 app = FastAPI(title="TRINETRA Backend Orchestrator", version="1.0")
+
+# Register SSE Telemetry Stream
+from api.telemetry_stream import router as stream_router
+from api.control import router as control_router
+app.include_router(stream_router, prefix="/api")
+app.include_router(control_router, prefix="/api")
 
 # Global singleton for the simulation engine
 sim_engine = SimulationEngine()
