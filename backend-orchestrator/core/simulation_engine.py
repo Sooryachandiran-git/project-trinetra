@@ -52,8 +52,8 @@ class SimulationEngine:
         
         # 1. Start Docker containers for IEDs & Provision logic
         for ied in payload.scada_system.ieds:
-            # Generate Web Port (e.g., 8080 + IED offset)
-            web_port = 8080 + payload.scada_system.ieds.index(ied)
+            # Shifted to 8090 to avoid conflict with local llama.cpp server on 8080
+            web_port = 8090 + payload.scada_system.ieds.index(ied)
             
             # Launch container
             if self.docker.run_ied(ied.id, ied.port, web_port):
@@ -190,12 +190,26 @@ class SimulationEngine:
             self.mb_server.update_voltage(vm_pu)
             self.mb_server.update_coil(0, True)
             
-            # Write Physics to IED Modbus memory
+            # Write Physics to IED Modbus memory (with graceful error handling per IED)
             for ied in self.payload.scada_system.ieds:
-                if hasattr(self.modbus, 'clients') and ied.id in self.modbus.clients:
-                    await self.modbus.clients[ied.id].write_registers(address=1024, values=[scaled_v, scaled_i], slave=1)
-                else:
-                    logger.warning(f"Could not write V/I to IED {ied.id}: client not found.")
+                client = self.modbus.clients.get(ied.id)
+                if client and client.connected:
+                    try:
+                        await client.write_registers(address=1024, values=[scaled_v, scaled_i], slave=1)
+                    except Exception as write_err:
+                        logger.warning(f"Write failed for IED {ied.id}: {write_err}. Attempting reconnect...")
+                        try:
+                            await client.connect()
+                        except Exception:
+                            pass
+                elif client and not client.connected:
+                    # Client exists but dropped — try to reconnect silently
+                    try:
+                        await client.connect()
+                        logger.info(f"IED {ied.id}: Reconnected to Modbus.")
+                    except Exception:
+                        pass  # Will retry next tick
+                # else: no client yet (still provisioning), silently skip
             
             # 5. Clean Console Telemetry Reporting
             breaker_count = len(self.net.switch) if hasattr(self.net, 'switch') else 0

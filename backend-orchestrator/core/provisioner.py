@@ -27,20 +27,29 @@ class Provisioner:
         self.dm = docker_manager
         self.client = docker_manager.client
 
-    def _wait_for_openplc(self, base_url: str, timeout: int = 90) -> bool:
-        """Poll the OpenPLC login page until the container HTTP server is ready."""
-        logger.info(f"Waiting for OpenPLC at {base_url}...")
+    def _wait_for_openplc(self, base_url: str, timeout: int = 240) -> bool:
+        """Poll the OpenPLC login page until the container HTTP server is ready.
+        
+        NOTE: Apple Silicon (M1/M2) runs linux/amd64 images under Rosetta emulation.
+        This can take 2-3 minutes to fully boot, hence the generous 240s timeout.
+        """
+        logger.info(f"Waiting for OpenPLC at {base_url} (timeout: {timeout}s)...")
         deadline = time.time() + timeout
+        attempt = 0
         while time.time() < deadline:
+            attempt += 1
             try:
                 res = requests.get(f"{base_url}/login", timeout=3)
                 if res.status_code == 200:
-                    logger.info("OpenPLC web server is ready!")
+                    logger.info(f"OpenPLC web server is ready! (attempt {attempt})")
                     return True
             except requests.exceptions.ConnectionError:
                 pass
+            remaining = int(deadline - time.time())
+            if attempt % 10 == 0:  # Log every 20 seconds
+                logger.info(f"  Still waiting for OpenPLC... ({remaining}s remaining)")
             time.sleep(2)
-        logger.error("OpenPLC did not start in time.")
+        logger.error(f"OpenPLC did not start in {timeout}s. Check: docker logs trinetra-ied-...")
         return False
 
     def _docker_exec(self, container_name: str, cmd: str, timeout: int = 60) -> tuple:

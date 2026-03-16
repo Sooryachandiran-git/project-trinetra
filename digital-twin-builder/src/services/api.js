@@ -15,7 +15,8 @@ export const sendDeployPayload = async (jsonPayload) => {
       body: JSON.stringify(jsonPayload),
     });
 
-    if (!response.ok) {
+    // Accept 200 (OK) or 202 (Accepted)
+    if (!response.ok && response.status !== 202) {
       const errorData = await response.json();
       throw new Error(errorData.detail || 'Failed to deploy architecture');
     }
