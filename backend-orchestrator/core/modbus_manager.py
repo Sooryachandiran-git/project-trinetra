@@ -15,13 +15,15 @@ class ModbusManager:
         self.clients: Dict[str, AsyncModbusTcpClient] = {}
         self.multiplier = multiplier
 
-    async def connect_ied(self, ied_id: str, host: str, port: int):
-        """Initialize and connect to a specific IED."""
+    async def connect_ied(self, ied_id: str, host: str, port: int) -> bool:
+        """Initialize and connect to a specific IED. Returns True if successful."""
         if ied_id not in self.clients:
             logger.info(f"Connecting to IED {ied_id} at {host}:{port}")
             client = AsyncModbusTcpClient(host, port=port)
-            await client.connect()
+            success = await client.connect()
             self.clients[ied_id] = client
+            return success
+        return self.clients[ied_id].connected
 
     async def disconnect_all(self):
         """Gracefully close all active Modbus connections."""

@@ -10,13 +10,24 @@ class DockerManager:
     """
     def __init__(self, image: str = "tuttas/openplc_v3"):
         try:
+            # Try default environment variables first
             self.client = docker.from_env()
+            self.client.ping() # Verify connection
             self.image = image
-            # On Apple Silicon Macs, we need to force amd64 for this specific image
             self.platform = "linux/amd64" 
         except Exception as e:
-            logger.error(f"Failed to initialize Docker client: {e}")
-            self.client = None
+            logger.warning(f"Default Docker connection failed: {e}. Trying Mac-specific socket...")
+            try:
+                # Fallback for Docker Desktop on Mac
+                socket_path = "unix:///Users/sooryachandirang/.docker/run/docker.sock"
+                self.client = docker.DockerClient(base_url=socket_path)
+                self.client.ping()
+                logger.info("Successfully connected using Mac-specific Docker socket.")
+                self.image = image
+                self.platform = "linux/amd64"
+            except Exception as e2:
+                logger.error(f"Failed to initialize Docker client on any path: {e2}")
+                self.client = None
 
     def run_ied(self, ied_id: str, modbus_port: int, web_port: int) -> bool:
         """

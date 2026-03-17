@@ -1,12 +1,18 @@
 {
-    "venvPath": ".",
-    "venv": "backend-orchestrator/venv",
     "include": [
         "backend-orchestrator"
     ],
+    "venvPath": ".",
+    "venv": "backend-orchestrator/venv",
     "extraPaths": [
-        "backend-orchestrator"
+        "./backend-orchestrator"
     ],
+    "executionEnvironments": [
+      {
+        "root": "backend-orchestrator"
+      }
+    ],
+    "typeCheckingMode": "basic",
     "exclude": [
         "**/node_modules",
         "**/__pycache__",

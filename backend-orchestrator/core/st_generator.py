@@ -16,6 +16,7 @@ class STGenerator:
         - Compares scaled voltage_pu from Pandapower against a 1.10 pu threshold (1100).
         - Trips ALL assigned breakers if overvoltage is detected.
         """
+        breaker_decls = ""
         for i, b_id in enumerate(controlled_breakers):
             safe_name = b_id.replace('-', '_').replace('.', '_')
             breaker_decls += f"    Trip_Cmd_{safe_name} AT %QX0.{i} : BOOL := FALSE;\n"

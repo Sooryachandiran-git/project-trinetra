@@ -51,8 +51,10 @@ class SimulationEngine:
         self.payload = payload
         
         # 1. Start Docker containers for IEDs & Provision logic
+        if not self.docker.client:
+            logger.error("DOCKER CLIENT MISSING: Cannot launch containers. Is Docker running?")
+            
         for ied in payload.scada_system.ieds:
-            # Shifted to 8090 to avoid conflict with local llama.cpp server on 8080
             web_port = 8090 + payload.scada_system.ieds.index(ied)
             
             # Launch container
@@ -83,8 +85,11 @@ class SimulationEngine:
             await asyncio.sleep(5)
 
             for ied in payload.scada_system.ieds:
-                await self.modbus.connect_ied(ied.id, "127.0.0.1", ied.port)
-                logger.info(f"Modbus connected to IED {ied.id} on port {ied.port}")
+                success = await self.modbus.connect_ied(ied.id, "127.0.0.1", ied.port)
+                if success:
+                    logger.info(f"Modbus connected to IED {ied.id} on port {ied.port}")
+                else:
+                    logger.error(f"FAILED to connect Modbus to IED {ied.id} on port {ied.port}")
 
         self.is_running = True
         self._task = asyncio.create_task(self._run_loop())
