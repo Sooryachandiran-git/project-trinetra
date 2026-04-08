@@ -2,6 +2,7 @@ import os
 import asyncio
 import logging
 import time
+import tempfile
 from typing import Optional, Dict, Any
 from core.grid_builder import build_pandapower_network
 from core.modbus_manager import ModbusManager
@@ -66,7 +67,7 @@ class SimulationEngine:
                 
                 if ied.st_code:
                     logger.info(f"IED {ied.id}: Using custom ST code from payload.")
-                    st_path = os.path.join("/tmp", f"ied_{ied.id}_custom.st")
+                    st_path = os.path.join(tempfile.gettempdir(), f"ied_{ied.id}_custom.st")
                     with open(st_path, "w") as f:
                         f.write(ied.st_code)
                 else:

@@ -1,11 +1,12 @@
 import os
+import tempfile
 
 class STGenerator:
     """
     Generates Structured Text (.st) code for OpenPLC IEDs.
     """
-    def __init__(self, output_dir: str = "/tmp/trinetra_st"):
-        self.output_dir = output_dir
+    def __init__(self, output_dir: str = None):
+        self.output_dir = output_dir or os.path.join(tempfile.gettempdir(), "trinetra_st")
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 

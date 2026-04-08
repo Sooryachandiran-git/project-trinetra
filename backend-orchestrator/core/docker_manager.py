@@ -1,4 +1,5 @@
 import docker
+import platform
 import logging
 from typing import List, Dict, Any
 
@@ -16,13 +17,16 @@ class DockerManager:
             self.image = image
             self.platform = "linux/amd64" 
         except Exception as e:
-            logger.warning(f"Default Docker connection failed: {e}. Trying Mac-specific socket...")
+            logger.warning(f"Default Docker connection failed: {e}. Trying platform-specific socket...")
             try:
-                # Fallback for Docker Desktop on Mac
-                socket_path = "unix:///Users/sooryachandirang/.docker/run/docker.sock"
+                # Cross-platform fallback: Windows uses named pipe, Unix/Mac uses standard socket
+                if platform.system() == "Windows":
+                    socket_path = "npipe:////./pipe/docker_engine"
+                else:
+                    socket_path = "unix:///var/run/docker.sock"
                 self.client = docker.DockerClient(base_url=socket_path)
                 self.client.ping()
-                logger.info("Successfully connected using Mac-specific Docker socket.")
+                logger.info(f"Successfully connected using {platform.system()} Docker socket.")
                 self.image = image
                 self.platform = "linux/amd64"
             except Exception as e2:
