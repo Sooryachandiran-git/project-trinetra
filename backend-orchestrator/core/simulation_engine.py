@@ -5,6 +5,7 @@ import time
 import tempfile
 from typing import Optional, Dict, Any
 from core.grid_builder import build_pandapower_network
+from core.data_writer import DataWriter
 from core.modbus_manager import ModbusManager
 from core.docker_manager import DockerManager
 from core.st_generator import STGenerator
@@ -35,6 +36,19 @@ class SimulationEngine:
         self.tick_rate = 0.5  # 500ms target
         self._task: Optional[asyncio.Task] = None
         self.mappings = {}
+
+        # ── InfluxDB DataWriter + runtime state trackers ─────────────────────
+        self.data_writer = DataWriter()
+        self.ied_bus_map: Dict[str, int] = {}
+        # attack_state is set via POST /api/attack/start (Step 7).
+        # Every tick reads this dict to stamp is_under_attack + attack_type tags.
+        self.attack_state: Dict[str, Any] = {
+            "active": False, "attack_type": "none",
+            "grid_state": "NORMAL", "attack_target": "none"
+        }
+        self._topology_id: str = "default"
+        self._health_tick_count: int = 0  # throttle system_health to every 10 ticks (5s)
+
         self.current_state = {
             "status": "offline",
             "voltage": 0.0,
@@ -79,6 +93,9 @@ class SimulationEngine:
         # 2. Initialize Pandapower net
         self.net, diagnostics = build_pandapower_network(payload)
         self.mappings = diagnostics.get("mappings", {})
+        self.ied_bus_map = self.mappings.get("ied_bus_map", {})
+        self._topology_id = str(payload.metadata.get("topology_id", f"run_{int(time.time())}"))
+        logger.info(f"Session | topology_id='{self._topology_id}' | ied_bus_map={self.ied_bus_map}")
 
         # 3. Connect to all IEDs via Modbus
         if payload.scada_system.ieds:
@@ -112,6 +129,10 @@ class SimulationEngine:
         loop = asyncio.get_event_loop()
         await loop.run_in_executor(None, self.docker.stop_all_ieds)
         
+        # Flush pending InfluxDB writes (saves buffer to disk if DB is down)
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, self.data_writer.close)
+
         self.net = None
         self.payload = None
 
@@ -134,6 +155,7 @@ class SimulationEngine:
         """A single iteration of the Cyber-Physical bridge."""
         if not self.net or not self.payload:
             return
+        _tick_start = time.time()
 
         # 1. READ: Get breaker statuses from IEDs
         mappings = [
@@ -228,7 +250,113 @@ class SimulationEngine:
                     except Exception:
                         pass  # Will retry next tick
                 # else: no client yet (still provisioning), silently skip
-            
+
+            # ── Dual-Source Readback + InfluxDB Write (per IED-Breaker control_mapping) ──
+            tick_duration_ms = (time.time() - _tick_start) * 1000
+            self._health_tick_count += 1
+            write_health = (self._health_tick_count % 10 == 0)  # every 10 ticks ≈ 5 seconds
+
+            # Grid-wide stats written to every row in the dataset
+            total_load_mw = float(self.net.res_load.p_mw.sum()) if (hasattr(self.net, 'res_load') and not self.net.res_load.empty) else 0.0
+            total_loss_mw = float(self.net.res_line.pl_mw.sum()) if (hasattr(self.net, 'res_line') and not self.net.res_line.empty) else 0.0
+            total_gen_mw  = float(self.net.res_ext_grid.p_mw.sum()) if (hasattr(self.net, 'res_ext_grid') and not self.net.res_ext_grid.empty) else 0.0
+
+            for mapping in self.payload.scada_system.control_mappings:
+                ied_id     = mapping.ied_id
+                breaker_id = mapping.breaker_id
+
+                # ── A. Per-bus localized physics truth (Option B) ──────────────────
+                bus_idx = self.ied_bus_map.get(ied_id, 0)
+                try:
+                    v_true    = float(self.net.res_bus.vm_pu.iloc[bus_idx])
+                    vn_kv_ied = float(self.net.bus.vn_kv.iloc[bus_idx])
+                except Exception:
+                    v_true, vn_kv_ied = vm_pu, vn_kv  # fallback to global
+
+                # ── B. Modbus read-back — what is in the IED register RIGHT NOW ──
+                # Normal: matches what we wrote (v_true scaled to integer)
+                # Under FDIA: attacker overwrote register → v_measured ≠ v_true
+                v_measured           = v_true
+                i_measured           = current_ka
+                scan_count           = 0
+                rtt_ms               = 0.0
+                consecutive_timeouts = 0
+                is_connected         = False
+
+                client = self.modbus.clients.get(ied_id)
+                if client and client.connected:
+                    is_connected = True
+                    t_read = time.time()
+                    try:
+                        # Read reg 1024 (voltage) + 1025 (current) back from IED
+                        result = await client.read_holding_registers(
+                            address=1024, count=2, slave=1
+                        )
+                        rtt_ms = (time.time() - t_read) * 1000
+                        if not result.isError():
+                            v_measured = result.registers[0] / 1000.0
+                            i_measured = result.registers[1] / 1000.0
+                    except Exception:
+                        consecutive_timeouts += 1
+
+                    try:
+                        # Read %QW24 → Modbus holding register 24 → plc_scan_count
+                        sc_result = await client.read_holding_registers(
+                            address=24, count=1, slave=1
+                        )
+                        if not sc_result.isError():
+                            scan_count = int(sc_result.registers[0])
+                    except Exception:
+                        pass
+
+                # ── C. Breaker ground truth from Pandapower ──────────────────
+                phys_closed = True
+                sw_map = self.mappings.get("switch_map", {})
+                if breaker_id in sw_map:
+                    phys_closed = bool(self.net.switch.at[sw_map[breaker_id], 'closed'])
+                plc_trip = bool(breaker_statuses.get(breaker_id, False))
+
+                # ── D. Comms status classification ──────────────────────────
+                if not is_connected:
+                    comms_status = "OFFLINE"
+                elif consecutive_timeouts > 3:
+                    comms_status = "DEGRADED"
+                else:
+                    comms_status = "ONLINE"
+
+                # ── E. Write to InfluxDB (enqueued — never blocks the tick loop) ──
+                self.data_writer.write_telemetry(
+                    ied_id=ied_id,
+                    breaker_id=breaker_id,
+                    topology_id=self._topology_id,
+                    physics={
+                        "vm_pu":      v_true,
+                        "v_kv":       v_true * vn_kv_ied,
+                        "i_ka":       current_ka,
+                        "total_load": total_load_mw,
+                        "total_loss": total_loss_mw,
+                        "total_gen":  total_gen_mw,
+                    },
+                    cyber={
+                        "vm_pu_measured": v_measured,
+                        "i_ka_measured":  i_measured,
+                        "scan_count":     scan_count,
+                        "rtt_ms":         rtt_ms,
+                    },
+                    attack_state=self.attack_state,
+                    breaker={"physical": phys_closed, "plc_cmd": plc_trip},
+                    tick_duration_ms=tick_duration_ms,
+                )
+
+                # system_health written every 10 ticks ≈ 5 seconds (Docker stats are slow)
+                if write_health:
+                    self.data_writer.write_system_health(
+                        ied_id=ied_id,
+                        connected=is_connected,
+                        consecutive_timeouts=consecutive_timeouts,
+                        comms_status=comms_status,
+                    )
+
             # 5. Clean Console Telemetry Reporting
             breaker_count = len(self.net.switch) if hasattr(self.net, 'switch') else 0
             any_open = any(v for v in breaker_statuses.values()) if breaker_statuses else False
