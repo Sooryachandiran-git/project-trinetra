@@ -168,8 +168,14 @@ class SimulationEngine:
                         
         # 3. SOLVE: Execute Power Flow
         import pandapower as pp
+        import copy
         try:
-            pp.runpp(self.net)
+            # Create a completely fresh memory block to bypass Windows/Numpy array locks
+            temp_net = copy.deepcopy(self.net)
+            pp.runpp(temp_net)
+            
+            # If successful, adopt the new network
+            self.net = temp_net
             logger.info("--- Physics Tick: Power Flow Converged ---")
         except Exception as e:
             logger.warning(f"Power flow failed to converge (possibly islanded): {e}")
