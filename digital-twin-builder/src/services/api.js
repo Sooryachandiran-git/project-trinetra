@@ -68,7 +68,10 @@ export const stopAttack = async (attackId) => {
 };
 
 export const fetchTelemetryHistory = async (topologyId, minutes = 60) => {
-  const response = await fetch(`${API_BASE_URL}/history/telemetry?topology_id=${topologyId}&minutes=${minutes}`);
+  let url = `${API_BASE_URL}/history/telemetry?minutes=${minutes}`;
+  if (topologyId) url += `&topology_id=${topologyId}`;
+  
+  const response = await fetch(url);
   if (!response.ok) throw new Error('Failed to fetch telemetry history');
   return response.json();
 };

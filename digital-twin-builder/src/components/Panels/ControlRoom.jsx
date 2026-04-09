@@ -192,8 +192,8 @@ const ControlRoom = () => {
                                     contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', color: '#f8fafc', fontSize: '12px' }}
                                     itemStyle={{ color: '#e2e8f0' }}
                                 />
-                                <Line yAxisId="left" type="monotone" dataKey="vm_pu" name="Voltage (pu)" stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} />
-                                <Line yAxisId="right" type="monotone" dataKey="i_ka" name="Current (kA)" stroke="#eab308" strokeWidth={2} dot={false} isAnimationActive={false} />
+                                <Line yAxisId="left" type="monotone" dataKey="bus_v_pu_measured" name="Voltage (pu)" stroke="#3b82f6" strokeWidth={2} dot={false} isAnimationActive={false} />
+                                <Line yAxisId="right" type="monotone" dataKey="line_i_ka_measured" name="Current (kA)" stroke="#eab308" strokeWidth={2} dot={false} isAnimationActive={false} />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>
