@@ -162,6 +162,25 @@ const NodePropertyModal = () => {
               />
               <p className="text-[10px] text-slate-400 mt-1 italic">If left empty, a default protection program will be generated.</p>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Monitors Bus (Physics Ground Truth)</label>
+              <select
+                name="monitors_bus"
+                value={formData.monitors_bus || ''}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+              >
+                <option value="">-- Global Fallback (Default) --</option>
+                {nodes.filter(n => n.type === 'bus').map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.data.label ? `${b.data.label} (${b.id.substring(0, 8)})` : b.id}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[10px] text-slate-400 mt-1 italic">
+                Links this IED's voltage measurements to a specific physical bus in the grid.
+              </p>
+            </div>
             <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                <p className="text-[11px] text-blue-700 font-medium leading-relaxed">
                  Connect this IED to one or more Circuit Breakers using edges to establish control.
