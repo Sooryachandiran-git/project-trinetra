@@ -153,10 +153,14 @@ class SimulationEngine:
             
             if breaker_id in switch_map:
                 switch_idx = switch_map[breaker_id]
-                prev_state = self.net.switch.at[switch_idx, 'closed']
-                self.net.switch.at[switch_idx, 'closed'] = is_closed
+                prev_state = bool(self.net.switch.at[switch_idx, 'closed'])
                 
                 if prev_state != is_closed:
+                    # Safe assignment bypassing Pandas copy-on-write view bugs
+                    new_col = self.net.switch['closed'].copy()
+                    new_col.at[switch_idx] = is_closed
+                    self.net.switch['closed'] = new_col
+                    
                     if is_closed:
                         logger.info(f"BREAKER {breaker_id}: RECLOSED -> Switch closed -> Flow restored")
                     else:
@@ -189,9 +193,10 @@ class SimulationEngine:
                 v_mag = 1.732 * vn_kv * vm_pu
                 current_ka = s_mva / v_mag if v_mag > 0 else 0.0
                 
+            import math
             # 3. Scale up to integers for Modbus format
-            scaled_v = int(vm_pu * 1000) # e.g. 1.0 pu -> 1000 (meaning 100.0%)
-            scaled_i = int(current_ka * 1000) # e.g. 0.25 kA -> 250 A
+            scaled_v = int(vm_pu * 1000) if not math.isnan(vm_pu) else 0 # e.g. 1.0 pu -> 1000 (meaning 100.0%)
+            scaled_i = int(current_ka * 1000) if not math.isnan(current_ka) else 0 # e.g. 0.25 kA -> 250 A
             
             self.mb_server.update_voltage(vm_pu)
             self.mb_server.update_coil(0, True)
