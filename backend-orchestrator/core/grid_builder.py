@@ -101,10 +101,34 @@ def build_pandapower_network(payload: DeploymentPayload):
             except Exception as e:
                 diagnostics["results"] = {"converged": False, "reason": str(e)}
             
+            # ── Build ied_bus_map ──────────────────────────────────────────────
+            # Maps each IED id → pandapower integer bus index.
+            # Uses IEDModel.monitors_bus (React node id) looked up in bus_map.
+            # This enables per-bus physics truth (bus_v_pu_true) per IED in the
+            # simulation tick — the foundation of the dual-source anomaly signal.
+            ied_bus_map: Dict[str, int] = {}
+            for ied in payload.scada_system.ieds:
+                if ied.monitors_bus and ied.monitors_bus in bus_map:
+                    # IED explicitly wired to a specific bus on the canvas
+                    ied_bus_map[ied.id] = bus_map[ied.monitors_bus]
+                    logger.info(
+                        f"IED '{ied.name}' monitors bus '{ied.monitors_bus}' "
+                        f"→ pandapower index {bus_map[ied.monitors_bus]}"
+                    )
+                else:
+                    # Fallback: use index 0 (source/slack bus) if not configured
+                    ied_bus_map[ied.id] = 0
+                    logger.warning(
+                        f"IED '{ied.name}' has no monitors_bus set. "
+                        f"Defaulting to bus index 0. "
+                        f"Set monitors_bus in the IED modal for accurate per-bus truth."
+                    )
+
             # Format MAPPINGS for the simulation engine
             diagnostics["mappings"] = {
-                "bus_map": bus_map,
-                "switch_map": switch_map
+                "bus_map":     bus_map,
+                "switch_map":  switch_map,
+                "ied_bus_map": ied_bus_map   # ← NEW: per-IED localized bus index
             }
         else:
             diagnostics["results"] = {"converged": False, "reason": "No valid power source attached to a bus."}
