@@ -48,3 +48,37 @@ export const sendStopSimulation = async () => {
     throw error;
   }
 };
+
+export const startAttack = async (payload) => {
+  const response = await fetch(`${API_BASE_URL}/attack/start`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) throw new Error('Failed to start attack');
+  return response.json();
+};
+
+export const stopAttack = async (attackId) => {
+  const response = await fetch(`${API_BASE_URL}/attack/stop/${attackId}`, {
+    method: 'POST',
+  });
+  if (!response.ok) throw new Error('Failed to stop attack');
+  return response.json();
+};
+
+export const fetchTelemetryHistory = async (topologyId, minutes = 60) => {
+  const response = await fetch(`${API_BASE_URL}/history/telemetry?topology_id=${topologyId}&minutes=${minutes}`);
+  if (!response.ok) throw new Error('Failed to fetch telemetry history');
+  return response.json();
+};
+
+export const fetchAlarmHistory = async (hours = 24) => {
+  const response = await fetch(`${API_BASE_URL}/history/alarms?hours=${hours}`);
+  if (!response.ok) throw new Error('Failed to fetch alarm history');
+  return response.json();
+};
+
+export const getExportDatasetUrl = (topologyId) => {
+  return `${API_BASE_URL}/history/export/${topologyId}`;
+};
