@@ -160,7 +160,7 @@ class DataWriter:
                     bucket=self.bucket,
                     org=self.org,
                     record="\n".join(batch),
-                    write_precision=WritePrecision.MS
+                    write_precision=WritePrecision.NS
                 )
                 # On success: mark all items as done
                 for _ in batch:
