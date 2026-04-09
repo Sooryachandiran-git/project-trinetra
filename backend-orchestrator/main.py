@@ -9,9 +9,11 @@ app = FastAPI(title="TRINETRA Backend Orchestrator", version="1.0")
 from api.telemetry_stream import router as stream_router
 from api.control import router as control_router
 from api.attack import router as attack_router
+from api.history import router as history_router
 app.include_router(stream_router, prefix="/api")
 app.include_router(control_router, prefix="/api")
 app.include_router(attack_router, prefix="/api")
+app.include_router(history_router, prefix="/api")
 
 # Global singleton for the simulation engine
 sim_engine = SimulationEngine()
