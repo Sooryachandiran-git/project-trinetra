@@ -9,6 +9,7 @@ export const compileGridToJSON = (nodes, edges) => {
     metadata: {
       generated_at: new Date().toISOString(),
       version: '1.0',
+      topology_id: `run_${Math.floor(Date.now() / 1000)}`,
       total_nodes: nodes.length,
       total_edges: edges.length
     },
@@ -80,6 +81,7 @@ export const compileGridToJSON = (nodes, edges) => {
           port: parseInt(node.data.port) || 5020,
           num_breakers: parseInt(node.data.num_breakers) || 1,
           st_code: node.data.st_code || null,
+          monitors_bus: node.data.monitors_bus || null,
           protocols: ['ModbusTCP']
         });
         break;
