@@ -1,6 +1,8 @@
 import docker
 import platform
 import logging
+import time
+import requests
 from typing import List, Dict, Any
 
 logger = logging.getLogger("DockerManager")
@@ -32,6 +34,10 @@ class DockerManager:
             except Exception as e2:
                 logger.error(f"Failed to initialize Docker client on any path: {e2}")
                 self.client = None
+
+        # Auto-start InfluxDB as persistent research infrastructure
+        if self.client:
+            self.start_influxdb()
 
     def run_ied(self, ied_id: str, modbus_port: int, web_port: int) -> bool:
         """
@@ -85,6 +91,72 @@ class DockerManager:
         except Exception as e:
             logger.error(f"Error launching IED {ied_id}: {e}")
             return False
+
+    def start_influxdb(self):
+        """
+        Launches the InfluxDB 2.7 container as persistent research infrastructure.
+        Called once at backend startup — survives across multiple simulation runs.
+        If already running, skips launch silently.
+        """
+        if not self.client:
+            return
+
+        INFLUX_NAME = "trinetra-influxdb"
+
+        # If already running — do nothing
+        try:
+            existing = self.client.containers.get(INFLUX_NAME)
+            if existing.status == "running":
+                logger.info("InfluxDB container already running. Skipping launch.")
+                return
+            else:
+                # Exists but stopped — restart it
+                logger.info("InfluxDB container found but stopped. Restarting...")
+                existing.start()
+                self._wait_for_influxdb()
+                return
+        except docker.errors.NotFound:
+            pass  # Not found — launch fresh below
+
+        logger.info("Launching TRINETRA InfluxDB container (influxdb:2.7)...")
+        try:
+            self.client.containers.run(
+                "influxdb:2.7",
+                name=INFLUX_NAME,
+                ports={"8086/tcp": 8086},
+                environment={
+                    "DOCKER_INFLUXDB_INIT_MODE": "setup",
+                    "DOCKER_INFLUXDB_INIT_USERNAME": "trinetra",
+                    "DOCKER_INFLUXDB_INIT_PASSWORD": "trinetra2026",
+                    "DOCKER_INFLUXDB_INIT_ORG": "trinetra",
+                    "DOCKER_INFLUXDB_INIT_BUCKET": "trinetra_raw",
+                    "DOCKER_INFLUXDB_INIT_RETENTION": "168h",  # 7 days raw retention
+                    "DOCKER_INFLUXDB_INIT_ADMIN_TOKEN": "trinetra-research-token"
+                },
+                restart_policy={"Name": "unless-stopped"},
+                detach=True
+            )
+            logger.info("InfluxDB container started. Waiting for readiness...")
+            self._wait_for_influxdb()
+        except Exception as e:
+            logger.error(f"Failed to start InfluxDB container: {e}")
+
+    def _wait_for_influxdb(self, timeout: int = 60):
+        """Poll InfluxDB /health endpoint until it reports 'pass' or timeout."""
+        deadline = time.time() + timeout
+        attempt = 0
+        while time.time() < deadline:
+            attempt += 1
+            try:
+                res = requests.get("http://localhost:8086/health", timeout=2)
+                if res.status_code == 200 and res.json().get("status") == "pass":
+                    logger.info(f"✅ InfluxDB ready (attempt {attempt}).")
+                    return True
+            except Exception:
+                pass
+            time.sleep(2)
+        logger.error("InfluxDB did not become ready within 60s. Data writes will fail until it starts.")
+        return False
 
     def stop_all_ieds(self):
         """
