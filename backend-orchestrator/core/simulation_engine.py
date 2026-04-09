@@ -172,7 +172,8 @@ class SimulationEngine:
         try:
             # Create a completely fresh memory block to bypass Windows/Numpy array locks
             temp_net = copy.deepcopy(self.net)
-            pp.runpp(temp_net)
+            # Use 'flat' initialization to force Pandapower to ignore any cached Read-Only results
+            pp.runpp(temp_net, init="flat")
             
             # If successful, adopt the new network
             self.net = temp_net

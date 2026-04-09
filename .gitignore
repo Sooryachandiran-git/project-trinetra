@@ -13,3 +13,6 @@ dist/
 
 # TRINETRA Dynamic Docker Output
 backend-orchestrator/temp_run/
+
+# Personal preparation docs
+docs/
