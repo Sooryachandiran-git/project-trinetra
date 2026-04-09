@@ -49,6 +49,14 @@ class IEDModel(BaseModel):
     name: str = "IED"
     port: int
     num_breakers: int = 1
+    monitors_bus: Optional[str] = None  # React node ID of the Bus this IED monitors.
+                                        # Used by grid_builder to build ied_bus_map:
+                                        #   { ied_id → pandapower bus index }
+                                        # This enables per-bus physics truth extraction
+                                        # (bus_v_pu_true) for each IED independently,
+                                        # which is the foundation of the dual-source
+                                        # anomaly signal (bus_v_delta) in the dataset.
+                                        # Falls back to bus index 0 if not set.
     st_code: Optional[str] = None
     protocols: List[str]
 
