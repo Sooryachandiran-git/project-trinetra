@@ -106,7 +106,10 @@ class SimulationEngine:
                 self.attack_state["grid_state"] = "NORMAL"
 
     def get_active_attacks(self):
-        return [attack_id for attack_id, state in self.attack_state.items() if state.get("enabled")]
+        return [
+            attack_id for attack_id, state in self.attack_state.items() 
+            if isinstance(state, dict) and state.get("enabled")
+        ]
 
     def _apply_attack_demos(self, breaker_statuses: Dict[str, bool], scaled_v: int, scaled_i: int):
         """
