@@ -85,6 +85,7 @@ export const fetchAlarmHistory = async (hours = 24) => {
 
 export const getExportDatasetUrl = (topologyId) => {
   return `${API_BASE_URL}/history/export/${topologyId}`;
+};
 
 export const setAtk12DemoState = async (enabled) => {
   try {
@@ -119,5 +120,4 @@ export const getAttackStates = async () => {
     console.error('API Error:', error);
     throw error;
   }
-
 };
