@@ -177,3 +177,34 @@ async def stop_attack(attack_id: str):
     )
 
     return {"status": "stopped", "attack_id": attack_id, "duration": round(duration, 2)}
+
+class MLLabelCommand(BaseModel):
+    port: int
+    attack_type: str
+    active: bool
+
+@router.post("/attack/ml_label")
+async def apply_ml_label(cmd: MLLabelCommand):
+    """
+    Called by external terminal attack scripts to sync their status with the ML Historian!
+    """
+    from main import sim_engine
+
+    if not sim_engine.is_running:
+        raise HTTPException(status_code=400, detail="Testbed offline.")
+
+    # Find which IED corresponds to the port the script is attacking
+    target_id = "unknown"
+    for ied_id, client in getattr(sim_engine, "modbus", type('obj', (object,), {'clients': {}})).clients.items():
+        if getattr(client, "comm_params", type('obj', (object,), {'port': 0})).port == cmd.port:
+            target_id = ied_id
+            break
+
+    sim_engine.attack_state = {
+        "active": cmd.active,
+        "attack_type": cmd.attack_type if cmd.active else "none",
+        "grid_state": "UNDER_ATTACK" if cmd.active else "NORMAL",
+        "attack_target": f"IED {target_id}" if cmd.active else "none"
+    }
+
+    return {"status": "labeled", "target_resolved": target_id}
