@@ -79,13 +79,31 @@ class SimulationEngine:
         }
 
     def set_attack_state(self, attack_id: str, enabled: bool, config: Optional[Dict[str, Any]] = None):
-        """Enable or disable a safe in-simulator attack demo."""
+        """Enable or disable an in-simulator attack demo and sync with Historian."""
         if attack_id not in self.attack_state:
             raise ValueError(f"Unknown attack id: {attack_id}")
 
         self.attack_state[attack_id]["enabled"] = enabled
         if config:
             self.attack_state[attack_id].update(config)
+
+        # ---- NEW: Sync with Historian Database Labels ----
+        if enabled:
+            # Mark the grid as under attack and tell the database the exact name (e.g. "atk12_mitm_demo")
+            self.attack_state["active"] = True
+            self.attack_state["attack_type"] = attack_id
+            self.attack_state["grid_state"] = "UNDER_ATTACK"
+        else:
+            # Check if ANY attacks are still enabled before reverting to NORMAL
+            # We explicitly ignore generic keys (like active, attack_type, etc.) and only check the attack objects (which are dicts with an "enabled" key)
+            any_active = any(
+                isinstance(v, dict) and v.get("enabled") 
+                for k, v in self.attack_state.items()
+            )
+            if not any_active:
+                self.attack_state["active"] = False
+                self.attack_state["attack_type"] = "none"
+                self.attack_state["grid_state"] = "NORMAL"
 
     def get_active_attacks(self):
         return [attack_id for attack_id, state in self.attack_state.items() if state.get("enabled")]
