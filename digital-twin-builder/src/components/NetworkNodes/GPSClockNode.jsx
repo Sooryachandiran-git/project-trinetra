@@ -2,8 +2,12 @@ import React, { memo, useState, useEffect } from 'react';
 import { Handle, Position } from '@xyflow/react';
 import { Clock } from 'lucide-react';
 
+import useGridStore from '../../store/useGridStore';
+
 const GPSClockNode = ({ data, isConnectable }) => {
   const [time, setTime] = useState(new Date());
+  const liveTelemetry = useGridStore(state => state.liveTelemetry);
+  const timeOffset = liveTelemetry?.gps_clock_offset || 0;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -13,12 +17,13 @@ const GPSClockNode = ({ data, isConnectable }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const formattedTime = time.toLocaleTimeString('en-GB', { 
+  const displayTime = new Date(time.getTime() + timeOffset * 1000);
+  const formattedTime = displayTime.toLocaleTimeString('en-GB', { 
     hour12: false, 
     hour: '2-digit', 
     minute: '2-digit', 
     second: '2-digit' 
-  }) + `:${time.getMilliseconds().toString().padStart(3, '0')}`;
+  }) + `:${displayTime.getMilliseconds().toString().padStart(3, '0')}`;
 
   return (
     <div className="px-4 py-2 shadow-md rounded-md bg-slate-900 border-2 border-amber-500/50 min-w-[200px]">

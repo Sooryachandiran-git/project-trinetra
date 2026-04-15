@@ -49,6 +49,7 @@ export const sendStopSimulation = async () => {
   }
 };
 
+
 export const startAttack = async (payload) => {
   const response = await fetch(`${API_BASE_URL}/attack/start`, {
     method: 'POST',
@@ -84,4 +85,39 @@ export const fetchAlarmHistory = async (hours = 24) => {
 
 export const getExportDatasetUrl = (topologyId) => {
   return `${API_BASE_URL}/history/export/${topologyId}`;
+
+export const setAtk12DemoState = async (enabled) => {
+  try {
+    const endpoint = enabled ? 'attacks/atk12/enable' : 'attacks/atk12/disable';
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to update ATK-12 demo state');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const getAttackStates = async () => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/attacks`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch attack states');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+
 };

@@ -64,8 +64,8 @@ PROGRAM trinetra_ied_{ied_id.replace('-','_').replace('.','_')}
     scan_count := scan_count + 1;
   END_IF;
 
-  (* Latching Protection Logic *)
-  IF V_scaled > 1100 THEN
+  (* Latching Protection Logic — Overvoltage OR Undervoltage *)
+  IF V_scaled > 1100 OR V_scaled <= 750 THEN
     fault_state := TRUE;
   END_IF;
 

@@ -15,6 +15,16 @@ from api.models import DeploymentPayload
 
 logger = logging.getLogger("SimulationEngine")
 
+
+class NTPListener(asyncio.DatagramProtocol):
+    def __init__(self, engine):
+        self.engine = engine
+
+    def datagram_received(self, data, addr):
+        if len(data) >= 48:
+            logger.warning(f"Malicious UDP NTP payload received from {addr}! GPS Desync triggered.")
+            self.engine.set_attack_state("atk13_gps_desync", True)
+
 class SimulationEngine:
     """
     The heart of the TRINETRA digital twin. 
@@ -36,26 +46,80 @@ class SimulationEngine:
         self.tick_rate = 0.5  # 500ms target
         self._task: Optional[asyncio.Task] = None
         self.mappings = {}
-
         # ── InfluxDB DataWriter + runtime state trackers ─────────────────────
         self.data_writer = DataWriter()
         self.ied_bus_map: Dict[str, int] = {}
         # attack_state is set via POST /api/attack/start (Step 7).
         # Every tick reads this dict to stamp is_under_attack + attack_type tags.
         self.attack_state: Dict[str, Any] = {
-            "active": False, "attack_type": "none",
-            "grid_state": "NORMAL", "attack_target": "none"
+            "active": False, 
+            "attack_type": "none",
+            "grid_state": "NORMAL", 
+            "attack_target": "none",
+            "atk12_mitm_demo": {
+                "enabled": False,
+                "mode": "mask_trip",
+                "voltage_scale": 1.08,
+                "current_scale": 0.82,
+            },
+            "atk13_gps_desync": {
+                "enabled": False
+            }
         }
+        self.ntp_transport = None
         self._topology_id: str = "default"
         self._health_tick_count: int = 0  # throttle system_health to every 10 ticks (5s)
-
         self.current_state = {
             "status": "offline",
             "voltage": 0.0,
             "current": 0.0,
             "breakers": {},
-            "ied_health": {}
+            "ied_health": {},
+            "active_attacks": []
         }
+
+    def set_attack_state(self, attack_id: str, enabled: bool, config: Optional[Dict[str, Any]] = None):
+        """Enable or disable a safe in-simulator attack demo."""
+        if attack_id not in self.attack_state:
+            raise ValueError(f"Unknown attack id: {attack_id}")
+
+        self.attack_state[attack_id]["enabled"] = enabled
+        if config:
+            self.attack_state[attack_id].update(config)
+
+    def get_active_attacks(self):
+        return [attack_id for attack_id, state in self.attack_state.items() if state.get("enabled")]
+
+    def _apply_attack_demos(self, breaker_statuses: Dict[str, bool], scaled_v: int, scaled_i: int):
+        """
+        Apply simulator-only tampering effects so the UI can demonstrate attack
+        behavior without performing a real MITM on the network.
+        """
+        outbound_breakers = dict(breaker_statuses)
+        outbound_v = scaled_v
+        outbound_i = scaled_i
+        attack_notes = []
+
+        atk12 = self.attack_state.get("atk12_mitm_demo", {})
+        if atk12.get("enabled"):
+            if atk12.get("mode") == "mask_trip":
+                outbound_breakers = {breaker_id: False for breaker_id in breaker_statuses}
+
+            outbound_v = max(0, int(scaled_v * float(atk12.get("voltage_scale", 1.08))))
+            outbound_i = max(0, int(scaled_i * float(atk12.get("current_scale", 0.82))))
+            attack_notes.append(
+                "ATK-12 demo active: simulated MITM is falsifying breaker state and telemetry."
+            )
+            
+        gps_offset = 0
+        atk13 = self.attack_state.get("atk13_gps_desync", {})
+        if atk13.get("enabled"):
+            gps_offset = 3600 * 24 * 365 * 5  # Jump 5 years into the future!
+            attack_notes.append(
+                "ATK-13 (GPS Time Desync) active! Distance relay PMUs reporting contradictory time-vectors. Fault location impossible."
+            )
+
+        return outbound_breakers, outbound_v, outbound_i, attack_notes, gps_offset
 
     async def start(self, payload: DeploymentPayload):
         """Initialize containers, provision logic, and start the polling loop."""
@@ -111,6 +175,17 @@ class SimulationEngine:
 
         self.is_running = True
         self._task = asyncio.create_task(self._run_loop())
+        
+        # Start NTP listener for ATK-13
+        loop = asyncio.get_event_loop()
+        try:
+            self.ntp_transport, _ = await loop.create_datagram_endpoint(
+                lambda: NTPListener(self),
+                local_addr=('0.0.0.0', 5123)
+            )
+            logger.info("NTP/GPS Time Simulator listening on UDP 5123")
+        except Exception as e:
+            logger.error(f"Failed to bind NTP listener: {e}")
 
     async def stop(self):
         """Stop simulation and cleanup Docker containers."""
@@ -119,6 +194,10 @@ class SimulationEngine:
         if self._task:
             self._task.cancel()
             self._task = None
+            
+        if hasattr(self, 'ntp_transport') and self.ntp_transport:
+            self.ntp_transport.close()
+            self.ntp_transport = None
             
         await self.modbus.disconnect_all()
         
@@ -226,7 +305,12 @@ class SimulationEngine:
             # 3. Scale up to integers for Modbus format
             scaled_v = int(vm_pu * 1000) if not math.isnan(vm_pu) else 0 # e.g. 1.0 pu -> 1000 (meaning 100.0%)
             scaled_i = int(current_ka * 1000) if not math.isnan(current_ka) else 0 # e.g. 0.25 kA -> 250 A
-            
+            telemetry_breakers, outbound_v, outbound_i, attack_notes, gps_offset = self._apply_attack_demos(
+                breaker_statuses,
+                scaled_v,
+                scaled_i,
+            )
+
             self.mb_server.update_voltage(vm_pu)
             self.mb_server.update_coil(0, True)
             
@@ -235,7 +319,7 @@ class SimulationEngine:
                 client = self.modbus.clients.get(ied.id)
                 if client and client.connected:
                     try:
-                        await client.write_registers(address=1024, values=[scaled_v, scaled_i], slave=1)
+                        await client.write_registers(address=1024, values=[outbound_v, outbound_i], slave=1)
                     except Exception as write_err:
                         logger.warning(f"Write failed for IED {ied.id}: {write_err}. Attempting reconnect...")
                         try:
@@ -380,6 +464,11 @@ class SimulationEngine:
                 "voltage_pu": round(vm_pu, 4),
                 "voltage_kv": round(vm_pu * vn_kv, 2),
                 "current_ka": round(current_ka, 4),
-                "breakers": breaker_statuses,
-                "ied_health": ied_health
+                "breakers": telemetry_breakers,
+                "ied_health": ied_health,
+                "active_attacks": self.get_active_attacks(),
+                "attack_notes": attack_notes,
+                "reported_voltage_pu": round(outbound_v / 1000, 4),
+                "reported_current_ka": round(outbound_i / 1000, 4),
+                "gps_clock_offset": gps_offset,
             }
