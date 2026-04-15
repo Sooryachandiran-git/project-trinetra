@@ -6,5 +6,5 @@
     "python.envFile": "${workspaceFolder}/.env",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.typeCheckingMode": "basic",
-    "python.languageServer": "Pylance"
+    "python.languageServer": "Jedi"
 }
