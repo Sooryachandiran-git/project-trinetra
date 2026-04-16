@@ -39,8 +39,8 @@ def get_telemetry_history(topology_id: Optional[str] = None, minutes: int = 60, 
     if ied_id:
         query += f'\n  |> filter(fn: (r) => r["ied_id"] == "{ied_id}")'
         
-    # Pivot fields into columns and sort chronologically
-    query += '\n  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\n  |> sort(columns: ["_time"], desc: false)'
+    # Pivot fields into columns, remove all existing groupings, and sort chronologically globally
+    query += '\n  |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")\n  |> group()\n  |> sort(columns: ["_time"], desc: false)'
     
     try:
         tables = query_api.query(query, org=INFLUX_ORG)
@@ -131,6 +131,7 @@ def export_dataset(topology_id: str):
       |> range(start: 0)
       |> filter(fn: (r) => r["_measurement"] == "grid_telemetry" and r["topology_id"] == "{topology_id}")
       |> pivot(rowKey:["_time"], columnKey: ["_field"], valueColumn: "_value")
+      |> group()
       |> sort(columns: ["_time"], desc: false)
     '''
     
