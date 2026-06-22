@@ -34,12 +34,43 @@ class SwitchModel(BaseModel):
     name: str = "Breaker"
     initial_status: str
 
+class TransformerModel(BaseModel):
+    id: str
+    name: str = "Transformer"
+    hv_bus: str
+    lv_bus: str
+    std_type: str = "160 MVA 380/110 kV"
+
+class Transformer3WModel(BaseModel):
+    id: str
+    name: str = "3W Transformer"
+    hv_bus: str
+    mv_bus: str
+    lv_bus: str
+    std_type: str = "63/25/38 MVA 110/20/10 kV"
+
+class SgenModel(BaseModel):
+    id: str
+    name: str = "Static Generator"
+    p_mw: float
+    q_mvar: float = 0.0
+
+class GenModel(BaseModel):
+    id: str
+    name: str = "Generator"
+    p_mw: float
+    vm_pu: float = 1.0
+
 class ElectricalGridModel(BaseModel):
     buses: List[BusModel] = []
     ext_grids: List[ExtGridModel] = []
     loads: List[LoadModel] = []
     lines: List[LineModel] = []
     switches: List[SwitchModel] = []
+    transformers: List[TransformerModel] = []
+    transformers3w: List[Transformer3WModel] = []
+    sgens: List[SgenModel] = []
+    gens: List[GenModel] = []
 
 
 # --- SCADA MODBUS MODELS ---

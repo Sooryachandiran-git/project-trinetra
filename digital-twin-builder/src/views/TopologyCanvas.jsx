@@ -18,10 +18,15 @@ import TransmissionLineNode from '../components/NetworkNodes/TransmissionLineNod
 import NetworkSwitchNode from '../components/NetworkNodes/NetworkSwitchNode';
 import GPSClockNode from '../components/NetworkNodes/GPSClockNode';
 import ScadaServerNode from '../components/NetworkNodes/ScadaServerNode';
+import TransformerNode from '../components/NetworkNodes/TransformerNode';
+import Transformer3WNode from '../components/NetworkNodes/Transformer3WNode';
+import SgenNode from '../components/NetworkNodes/SgenNode';
+import GenNode from '../components/NetworkNodes/GenNode';
 import Sidebar from '../components/Sidebar';
 import NodePropertyModal from '../components/ConfigModals/NodePropertyModal';
 import AttackInterface from '../components/Panels/AttackInterface';
 import ControlRoom from '../components/Panels/ControlRoom';
+import PandapowerResults from '../views/PandapowerResults';
 
 const nodeTypes = {
   bus: BusNode,
@@ -30,7 +35,11 @@ const nodeTypes = {
   ext_grid: ExternalGridNode,
   load: LoadNode,
   transmission_line: TransmissionLineNode,
-  gps_clock: GPSClockNode
+  gps_clock: GPSClockNode,
+  transformer: TransformerNode,
+  transformer3w: Transformer3WNode,
+  sgen: SgenNode,
+  gen: GenNode
 };
 
 const TopologyCanvas = () => {
@@ -156,6 +165,10 @@ const TopologyCanvas = () => {
     if (isPair('bus', 'transmission_line')) return true;
     if (isPair('bus', 'breaker')) return true;
     if (isPair('bus', 'bus')) return true;
+    if (isPair('bus', 'transformer')) return true;
+    if (isPair('bus', 'transformer3w')) return true;
+    if (isPair('bus', 'sgen')) return true;
+    if (isPair('bus', 'gen')) return true;
 
     // Any other connection is invalid (e.g. ext_grid to load, transmission_line to load)
     return false;
@@ -190,6 +203,8 @@ const TopologyCanvas = () => {
               <MiniMap />
             </ReactFlow>
           </div>
+        ) : activeView === 'pandapower' ? (
+          <PandapowerResults />
         ) : (
           <ControlRoom />
         )}

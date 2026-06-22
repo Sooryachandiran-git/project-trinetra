@@ -1,7 +1,8 @@
 from fastapi import FastAPI, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
-from api.models import DeploymentPayload
+from api.models import DeploymentPayload, ElectricalGridModel
 from core.simulation_engine import SimulationEngine
+from core.pandapower_solver import solve_pure_pandapower
 
 app = FastAPI(title="TRINETRA Backend Orchestrator", version="1.0")
 
@@ -55,6 +56,16 @@ async def stop_simulation():
     """Stops the background Cyber-Physical Tick loop."""
     await sim_engine.stop()
     return {"status": "success", "message": "Simulation stopped."}
+
+@app.post("/api/pandapower/solve")
+async def pandapower_solve(grid: ElectricalGridModel):
+    """
+    Executes a pure pandapower steady state solve on the provided grid topology.
+    Returns the resulting pandas dataframes serialized as JSON.
+    """
+    print(f"--- Received Pure Pandapower Solve Request ---")
+    results = solve_pure_pandapower(grid)
+    return results
 
 @app.on_event("shutdown")
 async def shutdown_event():

@@ -13,10 +13,12 @@ const useGridStore = create((set, get) => ({
   isRunMode: false,
   activeView: 'topology',
   liveTelemetry: null,
+  pandapowerResults: null,
 
   setRunMode: (status) => set({ isRunMode: status, activeView: 'topology' }),
   setActiveView: (view) => set({ activeView: view }),
   setLiveTelemetry: (data) => set({ liveTelemetry: data }),
+  setPandapowerResults: (results) => set({ pandapowerResults: results }),
 
   openModal: (nodeId) => set({ isModalOpen: true, selectedNodeId: nodeId }),
   closeModal: () => set({ isModalOpen: false, selectedNodeId: null }),

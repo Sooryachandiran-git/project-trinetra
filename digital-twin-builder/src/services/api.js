@@ -29,6 +29,28 @@ export const sendDeployPayload = async (jsonPayload) => {
   }
 };
 
+export const sendPandapowerSolve = async (jsonPayload) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/pandapower/solve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jsonPayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to solve pure pandapower');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
 export const sendStopSimulation = async () => {
   try {
     const response = await fetch(`${API_BASE_URL}/stop`, {

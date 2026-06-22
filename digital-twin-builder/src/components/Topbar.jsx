@@ -2,12 +2,13 @@ import React, { useRef, useState } from 'react';
 import { Save, Upload, Play, Loader2 } from 'lucide-react';
 import useGridStore from '../store/useGridStore';
 import { compileGridToJSON } from '../utils/jsonBuilder';
-import { sendDeployPayload, sendStopSimulation } from '../services/api';
-import { Square, Activity, LayoutTemplate } from 'lucide-react';
+import { sendDeployPayload, sendStopSimulation, sendPandapowerSolve } from '../services/api';
+import { Square, Activity, LayoutTemplate, Calculator } from 'lucide-react';
 
 const Topbar = () => {
-  const { nodes, edges, loadGrid, isRunMode, setRunMode, setLiveTelemetry, activeView, setActiveView } = useGridStore();
+  const { nodes, edges, loadGrid, isRunMode, setRunMode, setLiveTelemetry, activeView, setActiveView, setPandapowerResults } = useGridStore();
   const [isDeploying, setIsDeploying] = useState(false);
+  const [isSolving, setIsSolving] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleSave = () => {
@@ -92,6 +93,27 @@ const Topbar = () => {
     }
   };
 
+  const handleSolve = async () => {
+    setIsSolving(true);
+    try {
+      const payload = compileGridToJSON(nodes, edges);
+      console.log('--- SENDING PANDAPOWER SOLVE PAYLOAD ---', payload);
+      
+      const response = await sendPandapowerSolve(payload.electrical_grid);
+      
+      if (response.converged) {
+        setPandapowerResults(response);
+        setActiveView('pandapower');
+      } else {
+        alert(`Pandapower Solve Failed:\n\n${response.error || "Unknown Error"}`);
+      }
+    } catch (error) {
+      alert(`Solve Request Failed:\n\n${error.message}`);
+    } finally {
+      setIsSolving(false);
+    }
+  };
+
   const handleStop = async () => {
     try {
       await sendStopSimulation();
@@ -108,7 +130,7 @@ const Topbar = () => {
         <h1 className="font-semibold text-slate-800 text-lg tracking-tight">TRINETRA Builder</h1>
       </div>
 
-      {isRunMode && (
+      {(isRunMode || useGridStore.getState().pandapowerResults) && (
         <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
           <button 
             onClick={() => setActiveView('topology')}
@@ -121,17 +143,32 @@ const Topbar = () => {
             <LayoutTemplate size={16} />
             <span>Topology SLD</span>
           </button>
-          <button 
-            onClick={() => setActiveView('control_room')}
-            className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
-              activeView === 'control_room' 
-                ? 'bg-slate-800 text-emerald-400 shadow-sm' 
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Activity size={16} />
-            <span>Control Room</span>
-          </button>
+          {isRunMode && (
+            <button 
+              onClick={() => setActiveView('control_room')}
+              className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
+                activeView === 'control_room' 
+                  ? 'bg-slate-800 text-emerald-400 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Activity size={16} />
+              <span>Control Room</span>
+            </button>
+          )}
+          {useGridStore.getState().pandapowerResults && (
+            <button 
+              onClick={() => setActiveView('pandapower')}
+              className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
+                activeView === 'pandapower' 
+                  ? 'bg-white text-emerald-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Calculator size={16} />
+              <span>Physics Results</span>
+            </button>
+          )}
         </div>
       )}
 
@@ -161,8 +198,16 @@ const Topbar = () => {
             </button>
             <div className="w-px h-6 bg-slate-200 mx-2"></div>
             <button 
+              onClick={handleSolve}
+              disabled={isSolving || isDeploying}
+              className="flex items-center space-x-2 px-5 py-2 bg-emerald-600 text-white hover:bg-emerald-700 font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            >
+              {isSolving ? <Loader2 size={18} className="animate-spin" /> : <Calculator size={18} />}
+              <span>{isSolving ? 'Solving...' : 'Solve Physics'}</span>
+            </button>
+            <button 
               onClick={handleDeploy}
-              disabled={isDeploying}
+              disabled={isDeploying || isSolving}
               className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
             >
               {isDeploying ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}

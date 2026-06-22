@@ -192,6 +192,18 @@ const NodePropertyModal = () => {
         return (
           <div className="space-y-4">
             <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Standard Type</label>
+              <input
+                type="text"
+                name="type"
+                value={formData.type || 'generic_line'}
+                onChange={handleChange}
+                placeholder="e.g. NAYY 4x50 SE"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">If "generic_line", manual R/X values below are used.</p>
+            </div>
+            <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Length (km)</label>
               <input
                 type="number"
@@ -202,29 +214,102 @@ const NodePropertyModal = () => {
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Resistance (R ohm/km)</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  name="r_ohm_per_km"
-                  value={formData.r_ohm_per_km || '0.1'}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            {(!formData.type || formData.type === 'generic_line') && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Resistance (R ohm/km)</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    name="r_ohm_per_km"
+                    value={formData.r_ohm_per_km || '0.1'}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Reactance (X ohm/km)</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    name="x_ohm_per_km"
+                    value={formData.x_ohm_per_km || '0.2'}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Reactance (X ohm/km)</label>
-                <input
-                  type="number"
-                  step="0.001"
-                  name="x_ohm_per_km"
-                  value={formData.x_ohm_per_km || '0.2'}
-                  onChange={handleChange}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
+            )}
+          </div>
+        );
+      case 'transformer':
+      case 'transformer3w':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Standard Type</label>
+              <input
+                type="text"
+                name="std_type"
+                value={formData.std_type || (node.type === 'transformer' ? '160 MVA 380/110 kV' : '63/25/38 MVA 110/20/10 kV')}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-slate-500 mt-1">Pandapower standard type string.</p>
+            </div>
+          </div>
+        );
+      case 'sgen':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Active Power (P in MW)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="p_mw"
+                value={formData.p_mw || '10.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Reactive Power (Q in MVar)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="q_mvar"
+                value={formData.q_mvar || '0.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+        );
+      case 'gen':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Active Power (P in MW)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="p_mw"
+                value={formData.p_mw || '100.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Voltage Setpoint (vm_pu)</label>
+              <input
+                type="number"
+                step="0.01"
+                name="vm_pu"
+                value={formData.vm_pu || '1.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
           </div>
         );

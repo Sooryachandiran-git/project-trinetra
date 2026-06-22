@@ -18,7 +18,11 @@ export const compileGridToJSON = (nodes, edges) => {
       ext_grids: [],
       loads: [],
       lines: [],
-      switches: [] // Circuit breakers
+      switches: [], // Circuit breakers
+      transformers: [],
+      transformers3w: [],
+      sgens: [],
+      gens: []
     },
     scada_system: {
       ieds: [],
@@ -64,13 +68,58 @@ export const compileGridToJSON = (nodes, edges) => {
         });
         break;
 
-      case 'transmission_line':
+      case 'transmission_line': {
+        const inEdge = edges.find(e => e.target === node.id);
+        const outEdge = edges.find(e => e.source === node.id);
         payload.electrical_grid.lines.push({
           id: node.id,
           name: node.data.label || 'Transmission Line',
           length_km: parseFloat(node.data.length_km) || 10.0,
           r_ohm_per_km: parseFloat(node.data.r_ohm_per_km) || 0.1,
-          x_ohm_per_km: parseFloat(node.data.x_ohm_per_km) || 0.2
+          x_ohm_per_km: parseFloat(node.data.x_ohm_per_km) || 0.2,
+          type: node.data.type || 'generic_line',
+          from_node: inEdge ? inEdge.source : '',
+          to_node: outEdge ? outEdge.target : ''
+        });
+        break;
+      }
+
+      case 'transformer':
+        payload.electrical_grid.transformers.push({
+          id: node.id,
+          name: node.data.label || 'Transformer',
+          std_type: node.data.std_type || '160 MVA 380/110 kV',
+          hv_bus: '', // We will populate these in edge processing
+          lv_bus: ''
+        });
+        break;
+
+      case 'transformer3w':
+        payload.electrical_grid.transformers3w.push({
+          id: node.id,
+          name: node.data.label || '3W Transformer',
+          std_type: node.data.std_type || '63/25/38 MVA 110/20/10 kV',
+          hv_bus: '',
+          mv_bus: '',
+          lv_bus: ''
+        });
+        break;
+
+      case 'sgen':
+        payload.electrical_grid.sgens.push({
+          id: node.id,
+          name: node.data.label || 'Static Generator',
+          p_mw: parseFloat(node.data.p_mw) || 10.0,
+          q_mvar: parseFloat(node.data.q_mvar) || 0.0
+        });
+        break;
+
+      case 'gen':
+        payload.electrical_grid.gens.push({
+          id: node.id,
+          name: node.data.label || 'Generator',
+          p_mw: parseFloat(node.data.p_mw) || 100.0,
+          vm_pu: parseFloat(node.data.vm_pu) || 1.0
         });
         break;
 
@@ -115,15 +164,40 @@ export const compileGridToJSON = (nodes, edges) => {
       return;
     }
 
+    // If this edge connects TO or FROM a transformer, we need to map the bus IDs
+    const trafo = payload.electrical_grid.transformers.find(t => t.id === targetNode.id || t.id === sourceNode.id);
+    if (trafo) {
+      if (sourceNode.type === 'bus' && targetNode.type === 'transformer') {
+        trafo.hv_bus = sourceNode.id;
+      } else if (sourceNode.type === 'transformer' && targetNode.type === 'bus') {
+        trafo.lv_bus = targetNode.id;
+      }
+      return; // Handled as trafo connection, don't add generic line
+    }
+
+    const trafo3w = payload.electrical_grid.transformers3w.find(t => t.id === targetNode.id || t.id === sourceNode.id);
+    if (trafo3w) {
+      if (sourceNode.type === 'bus' && targetNode.type === 'transformer3w') {
+        trafo3w.hv_bus = sourceNode.id; // Assuming top is HV
+      } else if (sourceNode.type === 'transformer3w' && targetNode.type === 'bus') {
+        // Need logic for MV vs LV based on handle ID... for now just set lv_bus
+        trafo3w.lv_bus = targetNode.id;
+      }
+      return; 
+    }
+
     // Electrical Logic: Everything else is essentially a line/cable/switch
     // (In a full Pandapower model, nodes attach to buses. A line connects two buses).
-    // For this compiler, we just dump the raw electrical connections.
+    // If it's connecting a Bus to an ExtGrid, Load, Sgen, Gen, it's just a direct attachment, not a Line model in pandapower.
+    // Wait, the backend builder needs to know which bus an element connects to. 
+    // Right now, the backend `pandapower_solver.py` looks at `lines` to figure out attachments for loads/ext_grids? 
+    // Let's check `pandapower_solver.py`.
     payload.electrical_grid.lines.push({
       id: edge.id,
       from_node: sourceNode.id,
       to_node: targetNode.id,
-      length_km: 1.0, // Default for now
-      type: 'generic_line'
+      length_km: sourceNode.type === 'transmission_line' ? parseFloat(sourceNode.data.length_km) : 1.0, 
+      type: sourceNode.type === 'transmission_line' ? sourceNode.data.type : 'generic_line'
     });
   });
 

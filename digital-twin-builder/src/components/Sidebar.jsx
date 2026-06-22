@@ -9,7 +9,9 @@ import {
   Share2, 
   Clock, 
   Monitor,
-  Cpu
+  Cpu,
+  Network,
+  Sun
 } from 'lucide-react';
 
 const SidebarItem = ({ type, label, icon, description }) => {
@@ -55,8 +57,12 @@ const Sidebar = () => {
           <SidebarItem type="ext_grid" label="External Grid" icon={<Globe />} description="Main Power Source" />
           <SidebarItem type="bus" label="Bus" icon={<Square />} description="Distribution Node" />
           <SidebarItem type="transmission_line" label="TX Line" icon={<Zap />} description="Connecting Segment" />
+          <SidebarItem type="transformer" label="Transformer" icon={<Network />} description="2-Winding Trafo" />
+          <SidebarItem type="transformer3w" label="3W Transformer" icon={<Network />} description="3-Winding Trafo" />
           <SidebarItem type="breaker" label="Circuit Breaker" icon={<ToggleLeft />} description="Switching Device" />
           <SidebarItem type="load" label="Consumer Load" icon={<Activity />} description="P/Q Power Demand" />
+          <SidebarItem type="sgen" label="Static Generator" icon={<Sun />} description="Inverter Source" />
+          <SidebarItem type="gen" label="Generator" icon={<Zap />} description="Synchronous Machine" />
         </div>
       </div>
 
