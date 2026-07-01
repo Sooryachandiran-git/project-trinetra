@@ -14,11 +14,15 @@ const useGridStore = create((set, get) => ({
   activeView: 'topology',
   liveTelemetry: null,
   pandapowerResults: null,
+  andesResults: null,
+  cyberAttackResults: null,
 
   setRunMode: (status) => set({ isRunMode: status, activeView: 'topology' }),
   setActiveView: (view) => set({ activeView: view }),
   setLiveTelemetry: (data) => set({ liveTelemetry: data }),
   setPandapowerResults: (results) => set({ pandapowerResults: results }),
+  setAndesResults: (results) => set({ andesResults: results }),
+  setCyberAttackResults: (results) => set({ cyberAttackResults: results }),
 
   openModal: (nodeId) => set({ isModalOpen: true, selectedNodeId: nodeId }),
   closeModal: () => set({ isModalOpen: false, selectedNodeId: null }),

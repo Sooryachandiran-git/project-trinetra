@@ -44,7 +44,54 @@ export const sendPandapowerSolve = async (jsonPayload) => {
       throw new Error(errorData.detail || 'Failed to solve pure pandapower');
     }
 
-    return await response.json();
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const sendAndesSolve = async (jsonPayload) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/andes/solve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jsonPayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to solve pure ANDES');
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('API Error:', error);
+    throw error;
+  }
+};
+
+export const sendAndesCyberAttack = async (jsonPayload) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/andes/cyber-attack`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(jsonPayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.detail || 'Failed to simulate cyber attack');
+    }
+
+    const data = await response.json();
+    return data;
   } catch (error) {
     console.error('API Error:', error);
     throw error;

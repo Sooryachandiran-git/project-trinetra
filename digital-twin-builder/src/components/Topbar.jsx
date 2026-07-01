@@ -2,13 +2,15 @@ import React, { useRef, useState } from 'react';
 import { Save, Upload, Play, Loader2 } from 'lucide-react';
 import useGridStore from '../store/useGridStore';
 import { compileGridToJSON } from '../utils/jsonBuilder';
-import { sendDeployPayload, sendStopSimulation, sendPandapowerSolve } from '../services/api';
-import { Square, Activity, LayoutTemplate, Calculator } from 'lucide-react';
+import { sendDeployPayload, sendStopSimulation, sendPandapowerSolve, sendAndesSolve, sendAndesCyberAttack } from '../services/api';
+import { Square, Activity, LayoutTemplate, Calculator, Zap, ShieldAlert } from 'lucide-react';
 
 const Topbar = () => {
-  const { nodes, edges, loadGrid, isRunMode, setRunMode, setLiveTelemetry, activeView, setActiveView, setPandapowerResults } = useGridStore();
+  const { nodes, edges, loadGrid, isRunMode, setRunMode, setLiveTelemetry, activeView, setActiveView, setPandapowerResults, andesResults, setAndesResults, cyberAttackResults, setCyberAttackResults } = useGridStore();
   const [isDeploying, setIsDeploying] = useState(false);
   const [isSolving, setIsSolving] = useState(false);
+  const [isSolvingAndes, setIsSolvingAndes] = useState(false);
+  const [isSimulatingAttack, setIsSimulatingAttack] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleSave = () => {
@@ -114,6 +116,48 @@ const Topbar = () => {
     }
   };
 
+  const handleSolveAndes = async () => {
+    setIsSolvingAndes(true);
+    try {
+      const payload = compileGridToJSON(nodes, edges);
+      console.log('--- SENDING ANDES SOLVE PAYLOAD ---', payload);
+      
+      const response = await sendAndesSolve(payload.electrical_grid);
+      
+      if (response.converged) {
+        setAndesResults(response);
+        setActiveView('andes');
+      } else {
+        alert(`ANDES Solve Failed:\n\n${response.error || "Unknown Error"}`);
+      }
+    } catch (error) {
+      alert(`ANDES Solve Request Failed:\n\n${error.message}`);
+    } finally {
+      setIsSolvingAndes(false);
+    }
+  };
+
+  const handleSimulateCyberAttack = async () => {
+    setIsSimulatingAttack(true);
+    try {
+      const payload = compileGridToJSON(nodes, edges);
+      console.log('--- SENDING CYBER ATTACK TDS PAYLOAD ---', payload);
+      
+      const response = await sendAndesCyberAttack(payload.electrical_grid);
+      
+      if (response.converged) {
+        setCyberAttackResults(response);
+        setActiveView('cyber_attack');
+      } else {
+        alert(`Cyber Attack Simulation Failed:\n\n${response.error || "Unknown Error"}`);
+      }
+    } catch (error) {
+      alert(`Cyber Attack Request Failed:\n\n${error.message}`);
+    } finally {
+      setIsSimulatingAttack(false);
+    }
+  };
+
   const handleStop = async () => {
     try {
       await sendStopSimulation();
@@ -130,7 +174,7 @@ const Topbar = () => {
         <h1 className="font-semibold text-slate-800 text-lg tracking-tight">TRINETRA Builder</h1>
       </div>
 
-      {(isRunMode || useGridStore.getState().pandapowerResults) && (
+      {(isRunMode || useGridStore.getState().pandapowerResults || useGridStore.getState().andesResults) && (
         <div className="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
           <button 
             onClick={() => setActiveView('topology')}
@@ -167,6 +211,32 @@ const Topbar = () => {
             >
               <Calculator size={16} />
               <span>Physics Results</span>
+            </button>
+          )}
+          {useGridStore.getState().andesResults && (
+            <button 
+              onClick={() => setActiveView('andes')}
+              className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
+                activeView === 'andes' 
+                  ? 'bg-white text-purple-600 shadow-sm' 
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              <Zap size={16} />
+              <span>ANDES Results</span>
+            </button>
+          )}
+          {useGridStore.getState().cyberAttackResults && (
+            <button 
+              onClick={() => setActiveView('cyber_attack')}
+              className={`flex items-center space-x-2 px-4 py-1.5 rounded-md text-sm font-bold transition-all ${
+                activeView === 'cyber_attack' 
+                  ? 'bg-red-600 text-white shadow-sm' 
+                  : 'bg-white text-red-600 hover:bg-red-50'
+              }`}
+            >
+              <ShieldAlert size={16} />
+              <span>Cyber Attack Simulation</span>
             </button>
           )}
         </div>
@@ -206,8 +276,24 @@ const Topbar = () => {
               <span>{isSolving ? 'Solving...' : 'Solve Physics'}</span>
             </button>
             <button 
+              onClick={handleSolveAndes}
+              disabled={isSolvingAndes || isDeploying || isSolving || isSimulatingAttack}
+              className="flex items-center space-x-2 px-5 py-2 bg-purple-600 text-white hover:bg-purple-700 font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            >
+              {isSolvingAndes ? <Loader2 size={18} className="animate-spin" /> : <Zap size={18} />}
+              <span>{isSolvingAndes ? 'Solving ANDES...' : 'Solve ANDES'}</span>
+            </button>
+            <button 
+              onClick={handleSimulateCyberAttack}
+              disabled={isSimulatingAttack || isSolvingAndes || isDeploying || isSolving}
+              className="flex items-center space-x-2 px-5 py-2 bg-red-600 text-white hover:bg-red-700 font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
+            >
+              {isSimulatingAttack ? <Loader2 size={18} className="animate-spin" /> : <ShieldAlert size={18} />}
+              <span>{isSimulatingAttack ? 'Simulating Attack...' : 'Simulate Cyber Attack'}</span>
+            </button>
+            <button 
               onClick={handleDeploy}
-              disabled={isDeploying || isSolving}
+              disabled={isDeploying || isSolving || isSolvingAndes || isSimulatingAttack}
               className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white hover:bg-blue-700 font-medium rounded-lg shadow-sm transition-colors disabled:opacity-50"
             >
               {isDeploying ? <Loader2 size={18} className="animate-spin" /> : <Play size={18} fill="currentColor" />}

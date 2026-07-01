@@ -27,6 +27,8 @@ import NodePropertyModal from '../components/ConfigModals/NodePropertyModal';
 import AttackInterface from '../components/Panels/AttackInterface';
 import ControlRoom from '../components/Panels/ControlRoom';
 import PandapowerResults from '../views/PandapowerResults';
+import AndesResults from '../views/AndesResults';
+import CyberAttackResultsView from '../views/CyberAttackResultsView';
 
 const nodeTypes = {
   bus: BusNode,
@@ -205,6 +207,10 @@ const TopologyCanvas = () => {
           </div>
         ) : activeView === 'pandapower' ? (
           <PandapowerResults />
+        ) : activeView === 'andes' ? (
+          <AndesResults />
+        ) : activeView === 'cyber_attack' ? (
+          <CyberAttackResultsView />
         ) : (
           <ControlRoom />
         )}

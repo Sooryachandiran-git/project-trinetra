@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from api.models import DeploymentPayload, ElectricalGridModel
 from core.simulation_engine import SimulationEngine
 from core.pandapower_solver import solve_pure_pandapower
+from core.andes_solver import solve_andes_powerflow, simulate_cyber_attack
 
 app = FastAPI(title="TRINETRA Backend Orchestrator", version="1.0")
 
@@ -65,6 +66,26 @@ async def pandapower_solve(grid: ElectricalGridModel):
     """
     print(f"--- Received Pure Pandapower Solve Request ---")
     results = solve_pure_pandapower(grid)
+    return results
+
+@app.post("/api/andes/solve")
+async def andes_solve(grid: ElectricalGridModel):
+    """
+    Executes a pure ANDES steady state solve on the provided grid topology.
+    Returns the resulting pandas dataframes serialized as JSON.
+    """
+    print(f"--- Received Pure ANDES Solve Request ---")
+    results = solve_andes_powerflow(grid)
+    return results
+
+@app.post("/api/andes/cyber-attack")
+async def andes_cyber_attack(grid: ElectricalGridModel):
+    """
+    Executes an ANDES Time-Domain Simulation (TDS) simulating a cyber-attack 
+    (tripping a line) and returns the voltage trajectories.
+    """
+    print(f"--- Received ANDES Cyber Attack TDS Request ---")
+    results = simulate_cyber_attack(grid)
     return results
 
 @app.on_event("shutdown")

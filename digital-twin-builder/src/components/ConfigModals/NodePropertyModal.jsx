@@ -215,30 +215,56 @@ const NodePropertyModal = () => {
               />
             </div>
             {(!formData.type || formData.type === 'generic_line') && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Resistance (R ohm/km)</label>
-                  <input
-                    type="number"
-                    step="0.001"
-                    name="r_ohm_per_km"
-                    value={formData.r_ohm_per_km || '0.1'}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Resistance (R ohm/km)</label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      name="r_ohm_per_km"
+                      value={formData.r_ohm_per_km || '0.1'}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Reactance (X ohm/km)</label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      name="x_ohm_per_km"
+                      value={formData.x_ohm_per_km || '0.2'}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Reactance (X ohm/km)</label>
-                  <input
-                    type="number"
-                    step="0.001"
-                    name="x_ohm_per_km"
-                    value={formData.x_ohm_per_km || '0.2'}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Capacitance (C nF/km)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      name="c_nf_per_km"
+                      value={formData.c_nf_per_km || '10.0'}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Thermal Limit (I max kA)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      name="max_i_ka"
+                      value={formData.max_i_ka || '0.4'}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
-              </div>
+              </>
             )}
           </div>
         );
@@ -246,17 +272,97 @@ const NodePropertyModal = () => {
       case 'transformer3w':
         return (
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Standard Type</label>
+            <div className="flex items-center mb-2">
               <input
-                type="text"
-                name="std_type"
-                value={formData.std_type || (node.type === 'transformer' ? '160 MVA 380/110 kV' : '63/25/38 MVA 110/20/10 kV')}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                type="checkbox"
+                id="use_std_type"
+                name="use_std_type"
+                checked={formData.use_std_type !== false} // default to true
+                onChange={(e) => setFormData(prev => ({ ...prev, use_std_type: e.target.checked }))}
+                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
               />
-              <p className="text-xs text-slate-500 mt-1">Pandapower standard type string.</p>
+              <label htmlFor="use_std_type" className="ml-2 block text-sm font-medium text-slate-700">
+                Use Pandapower Standard Type
+              </label>
             </div>
+            {formData.use_std_type !== false ? (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Standard Type</label>
+                <input
+                  type="text"
+                  name="std_type"
+                  value={formData.std_type || (node.type === 'transformer' ? '160 MVA 380/110 kV' : '63/25/38 MVA 110/20/10 kV')}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <p className="text-xs text-slate-500 mt-1">Pandapower standard type string.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Rated MVA</label>
+                    <input
+                      type="number" step="0.1" name="sn_mva" value={formData.sn_mva || '160'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">HV (kV)</label>
+                    <input
+                      type="number" step="0.1" name="vn_hv_kv" value={formData.vn_hv_kv || '380'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">LV (kV)</label>
+                    <input
+                      type="number" step="0.1" name="vn_lv_kv" value={formData.vn_lv_kv || '110'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">SC Voltage (vk %)</label>
+                    <input
+                      type="number" step="0.1" name="vk_percent" value={formData.vk_percent || '12.2'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Real SC (vkr %)</label>
+                    <input
+                      type="number" step="0.1" name="vkr_percent" value={formData.vkr_percent || '0.26'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Iron Loss (kW)</label>
+                    <input
+                      type="number" step="0.1" name="pfe_kw" value={formData.pfe_kw || '115'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">No Load I0 (%)</label>
+                    <input
+                      type="number" step="0.1" name="i0_percent" value={formData.i0_percent || '0.06'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Phase Shift (°)</label>
+                    <input
+                      type="number" step="0.1" name="shift_degree" value={formData.shift_degree || '150'} onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'sgen':

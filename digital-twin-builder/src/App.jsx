@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import LandingPage from './views/LandingPage'
 import TopologyCanvas from './views/TopologyCanvas'
+import CyberAttackResultsView from './views/CyberAttackResultsView'
 
 function App() {
   const [currentView, setCurrentView] = useState('landing')
@@ -9,6 +10,8 @@ function App() {
     const handleHashChange = () => {
       if (window.location.hash === '#workspace') {
         setCurrentView('workspace')
+      } else if (window.location.hash === '#cyber_attack') {
+        setCurrentView('cyber_attack')
       } else {
         setCurrentView('landing')
       }
@@ -27,6 +30,7 @@ function App() {
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900">
       {currentView === 'landing' && <LandingPage />}
       {currentView === 'workspace' && <TopologyCanvas />}
+      {currentView === 'cyber_attack' && <CyberAttackResultsView />}
     </div>
   )
 }

@@ -79,9 +79,9 @@ def solve_pure_pandapower(grid: ElectricalGridModel):
                     try:
                         pp.create_line(net, from_bus=bus_from, to_bus=bus_to, length_km=line.length_km, std_type=line.type, name=f"Line {line.from_node}-{line.to_node}")
                     except:
-                        pp.create_line_from_parameters(net, from_bus=bus_from, to_bus=bus_to, length_km=line.length_km, r_ohm_per_km=line.r_ohm_per_km, x_ohm_per_km=line.x_ohm_per_km, c_nf_per_km=10.0, max_i_ka=0.4)
+                        pp.create_line_from_parameters(net, from_bus=bus_from, to_bus=bus_to, length_km=line.length_km, r_ohm_per_km=line.r_ohm_per_km, x_ohm_per_km=line.x_ohm_per_km, c_nf_per_km=line.c_nf_per_km, max_i_ka=line.max_i_ka, name=f"Line {line.id}")
                 else:
-                    pp.create_line_from_parameters(net, from_bus=bus_from, to_bus=bus_to, length_km=line.length_km, r_ohm_per_km=line.r_ohm_per_km, x_ohm_per_km=line.x_ohm_per_km, c_nf_per_km=10.0, max_i_ka=0.4)
+                    pp.create_line_from_parameters(net, from_bus=bus_from, to_bus=bus_to, length_km=line.length_km, r_ohm_per_km=line.r_ohm_per_km, x_ohm_per_km=line.x_ohm_per_km, c_nf_per_km=line.c_nf_per_km, max_i_ka=line.max_i_ka, name=f"Line {line.id}")
 
         # 7. Create Transformers
         for trafo in grid.transformers:
@@ -90,7 +90,16 @@ def solve_pure_pandapower(grid: ElectricalGridModel):
             bus_lv = bus_map.get(trafo.lv_bus)
             
             if bus_hv is not None and bus_lv is not None:
-                pp.create_transformer(net, hv_bus=bus_hv, lv_bus=bus_lv, std_type=trafo.std_type, name=trafo.name)
+                if getattr(trafo, 'use_std_type', True):
+                    pp.create_transformer(net, hv_bus=bus_hv, lv_bus=bus_lv, std_type=trafo.std_type, name=trafo.name)
+                else:
+                    pp.create_transformer_from_parameters(
+                        net, hv_bus=bus_hv, lv_bus=bus_lv, 
+                        sn_mva=trafo.sn_mva, vn_hv_kv=trafo.vn_hv_kv, vn_lv_kv=trafo.vn_lv_kv, 
+                        vk_percent=trafo.vk_percent, vkr_percent=trafo.vkr_percent, 
+                        pfe_kw=trafo.pfe_kw, i0_percent=trafo.i0_percent, 
+                        shift_degree=trafo.shift_degree, name=trafo.name
+                    )
                 
         # 8. Create 3W Transformers
         for trafo3w in grid.transformers3w:

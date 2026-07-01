@@ -28,6 +28,8 @@ class LineModel(BaseModel):
     length_km: float = 1.0
     r_ohm_per_km: float = 0.1
     x_ohm_per_km: float = 0.1
+    c_nf_per_km: float = 10.0
+    max_i_ka: float = 0.4
 
 class SwitchModel(BaseModel):
     id: str
@@ -39,7 +41,16 @@ class TransformerModel(BaseModel):
     name: str = "Transformer"
     hv_bus: str
     lv_bus: str
+    use_std_type: bool = True
     std_type: str = "160 MVA 380/110 kV"
+    sn_mva: float = 160.0
+    vn_hv_kv: float = 380.0
+    vn_lv_kv: float = 110.0
+    vk_percent: float = 12.2
+    vkr_percent: float = 0.26
+    pfe_kw: float = 115.0
+    i0_percent: float = 0.06
+    shift_degree: float = 150.0
 
 class Transformer3WModel(BaseModel):
     id: str
