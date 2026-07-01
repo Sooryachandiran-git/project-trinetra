@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+py_dss_interface
+pandas
+pydantic
