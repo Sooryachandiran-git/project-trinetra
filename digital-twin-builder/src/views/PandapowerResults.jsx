@@ -73,7 +73,8 @@ const PandapowerResults = () => {
     { id: 'res_load', label: 'Loads' },
     { id: 'res_ext_grid', label: 'Ext Grids' },
     { id: 'res_sgen', label: 'Sgens' },
-    { id: 'res_gen', label: 'Gens' }
+    { id: 'res_gen', label: 'Gens' },
+    { id: 'res_shunt', label: 'Shunts' }
   ].filter(tab => pandapowerResults[tab.id] && pandapowerResults[tab.id].length > 0);
 
   return (

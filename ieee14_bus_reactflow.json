@@ -1,0 +1,1625 @@
+{
+  "nodes": [
+    {
+      "id": "bus_0",
+      "type": "bus",
+      "position": {
+        "x": 1707.895161433875,
+        "y": 1328.7185566952553
+      },
+      "data": {
+        "label": "Bus 0",
+        "vn_kv": "135.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_1",
+      "type": "bus",
+      "position": {
+        "x": 1336.822637909377,
+        "y": 1462.4034591778845
+      },
+      "data": {
+        "label": "Bus 1",
+        "vn_kv": "135.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_2",
+      "type": "bus",
+      "position": {
+        "x": 1100.7484067944986,
+        "y": 1756.6665104148133
+      },
+      "data": {
+        "label": "Bus 2",
+        "vn_kv": "135.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_3",
+      "type": "bus",
+      "position": {
+        "x": 957.7793301561316,
+        "y": 1344.3475516064714
+      },
+      "data": {
+        "label": "Bus 3",
+        "vn_kv": "135.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_4",
+      "type": "bus",
+      "position": {
+        "x": 1348.061251916271,
+        "y": 1089.6227101409722
+      },
+      "data": {
+        "label": "Bus 4",
+        "vn_kv": "135.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_5",
+      "type": "bus",
+      "position": {
+        "x": 1302.452554766602,
+        "y": 639.4060399944049
+      },
+      "data": {
+        "label": "Bus 5",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_6",
+      "type": "bus",
+      "position": {
+        "x": 544.4710712128237,
+        "y": 1400.1383919822383
+      },
+      "data": {
+        "label": "Bus 6",
+        "vn_kv": "14.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_7",
+      "type": "bus",
+      "position": {
+        "x": 200.0,
+        "y": 1636.3864261074814
+      },
+      "data": {
+        "label": "Bus 7",
+        "vn_kv": "12.0"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_8",
+      "type": "bus",
+      "position": {
+        "x": 651.361065814752,
+        "y": 1027.012267222752
+      },
+      "data": {
+        "label": "Bus 8",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_9",
+      "type": "bus",
+      "position": {
+        "x": 428.58137752905145,
+        "y": 659.5227546539402
+      },
+      "data": {
+        "label": "Bus 9",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_10",
+      "type": "bus",
+      "position": {
+        "x": 816.7762145740746,
+        "y": 381.0384368323945
+      },
+      "data": {
+        "label": "Bus 10",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_11",
+      "type": "bus",
+      "position": {
+        "x": 1572.5685046982094,
+        "y": 328.00329179983885
+      },
+      "data": {
+        "label": "Bus 11",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_12",
+      "type": "bus",
+      "position": {
+        "x": 1199.768119337106,
+        "y": 315.99341647707
+      },
+      "data": {
+        "label": "Bus 12",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "bus_13",
+      "type": "bus",
+      "position": {
+        "x": 832.7143038572275,
+        "y": 630.7401868944838
+      },
+      "data": {
+        "label": "Bus 13",
+        "vn_kv": "0.208"
+      },
+      "measured": {
+        "width": 150,
+        "height": 55
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "ext_0",
+      "type": "ext_grid",
+      "position": {
+        "x": 1707.895161433875,
+        "y": 1178.7185566952553
+      },
+      "data": {
+        "label": "Ext Grid 0",
+        "vm_pu": "1.06",
+        "va_degree": "0.0"
+      },
+      "measured": {
+        "width": 206,
+        "height": 94
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gen_0",
+      "type": "gen",
+      "position": {
+        "x": 1486.822637909377,
+        "y": 1362.4034591778845
+      },
+      "data": {
+        "label": "Gen 0",
+        "p_mw": "40.0",
+        "vm_pu": "1.045"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gen_1",
+      "type": "gen",
+      "position": {
+        "x": 1250.7484067944986,
+        "y": 1656.6665104148133
+      },
+      "data": {
+        "label": "Gen 1",
+        "p_mw": "0.0",
+        "vm_pu": "1.01"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gen_2",
+      "type": "gen",
+      "position": {
+        "x": 1452.452554766602,
+        "y": 539.4060399944049
+      },
+      "data": {
+        "label": "Gen 2",
+        "p_mw": "0.0",
+        "vm_pu": "1.07"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "gen_3",
+      "type": "gen",
+      "position": {
+        "x": 350.0,
+        "y": 1536.3864261074814
+      },
+      "data": {
+        "label": "Gen 3",
+        "p_mw": "0.0",
+        "vm_pu": "1.09"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_0",
+      "type": "load",
+      "position": {
+        "x": 1186.822637909377,
+        "y": 1562.4034591778845
+      },
+      "data": {
+        "label": "Load 0",
+        "p_mw": "21.7",
+        "q_mvar": "12.7"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_1",
+      "type": "load",
+      "position": {
+        "x": 950.7484067944986,
+        "y": 1856.6665104148133
+      },
+      "data": {
+        "label": "Load 1",
+        "p_mw": "94.2",
+        "q_mvar": "19.0"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_2",
+      "type": "load",
+      "position": {
+        "x": 807.7793301561316,
+        "y": 1444.3475516064714
+      },
+      "data": {
+        "label": "Load 2",
+        "p_mw": "47.8",
+        "q_mvar": "-3.9"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_3",
+      "type": "load",
+      "position": {
+        "x": 1198.061251916271,
+        "y": 1189.6227101409722
+      },
+      "data": {
+        "label": "Load 3",
+        "p_mw": "7.6",
+        "q_mvar": "1.6"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_4",
+      "type": "load",
+      "position": {
+        "x": 1152.452554766602,
+        "y": 739.4060399944049
+      },
+      "data": {
+        "label": "Load 4",
+        "p_mw": "11.2",
+        "q_mvar": "7.5"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_5",
+      "type": "load",
+      "position": {
+        "x": 501.361065814752,
+        "y": 1127.012267222752
+      },
+      "data": {
+        "label": "Load 5",
+        "p_mw": "29.5",
+        "q_mvar": "16.6"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_6",
+      "type": "load",
+      "position": {
+        "x": 278.58137752905145,
+        "y": 759.5227546539402
+      },
+      "data": {
+        "label": "Load 6",
+        "p_mw": "9.0",
+        "q_mvar": "5.8"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_7",
+      "type": "load",
+      "position": {
+        "x": 666.7762145740746,
+        "y": 481.0384368323945
+      },
+      "data": {
+        "label": "Load 7",
+        "p_mw": "3.5",
+        "q_mvar": "1.8"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_8",
+      "type": "load",
+      "position": {
+        "x": 1422.5685046982094,
+        "y": 428.00329179983885
+      },
+      "data": {
+        "label": "Load 8",
+        "p_mw": "6.1",
+        "q_mvar": "1.6"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_9",
+      "type": "load",
+      "position": {
+        "x": 1049.768119337106,
+        "y": 415.99341647707
+      },
+      "data": {
+        "label": "Load 9",
+        "p_mw": "13.5",
+        "q_mvar": "5.8"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "load_10",
+      "type": "load",
+      "position": {
+        "x": 682.7143038572275,
+        "y": 730.7401868944838
+      },
+      "data": {
+        "label": "Load 10",
+        "p_mw": "14.9",
+        "q_mvar": "5.0"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "shunt_0",
+      "type": "shunt",
+      "position": {
+        "x": 801.361065814752,
+        "y": 1127.012267222752
+      },
+      "data": {
+        "label": "Shunt 0",
+        "p_mw": "0.0",
+        "q_mvar": "-19.0",
+        "vn_kv": "0.208",
+        "step": "1"
+      },
+      "measured": {
+        "width": 172,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_0",
+      "type": "transmission_line",
+      "position": {
+        "x": 1522.358899671626,
+        "y": 1395.56100793657
+      },
+      "data": {
+        "label": "Line 0",
+        "length_km": "1.0",
+        "r_ohm_per_km": "3.532005",
+        "x_ohm_per_km": "10.7837325",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_1",
+      "type": "transmission_line",
+      "position": {
+        "x": 1527.9782066750731,
+        "y": 1209.1706334181138
+      },
+      "data": {
+        "label": "Line 1",
+        "length_km": "1.0",
+        "r_ohm_per_km": "9.8469675",
+        "x_ohm_per_km": "40.64904",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_2",
+      "type": "transmission_line",
+      "position": {
+        "x": 1218.7855223519377,
+        "y": 1609.534984796349
+      },
+      "data": {
+        "label": "Line 2",
+        "length_km": "1.0",
+        "r_ohm_per_km": "8.5639275",
+        "x_ohm_per_km": "36.0800325",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_3",
+      "type": "transmission_line",
+      "position": {
+        "x": 1147.3009840327543,
+        "y": 1403.375505392178
+      },
+      "data": {
+        "label": "Line 3",
+        "length_km": "1.0",
+        "r_ohm_per_km": "10.5905475",
+        "x_ohm_per_km": "32.13432",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_4",
+      "type": "transmission_line",
+      "position": {
+        "x": 1342.441944912824,
+        "y": 1276.0130846594284
+      },
+      "data": {
+        "label": "Line 4",
+        "length_km": "1.0",
+        "r_ohm_per_km": "10.3791375",
+        "x_ohm_per_km": "31.68963",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_5",
+      "type": "transmission_line",
+      "position": {
+        "x": 1029.2638684753151,
+        "y": 1550.5070310106423
+      },
+      "data": {
+        "label": "Line 5",
+        "length_km": "1.0",
+        "r_ohm_per_km": "12.2125725",
+        "x_ohm_per_km": "31.1702175",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_6",
+      "type": "transmission_line",
+      "position": {
+        "x": 1152.9202910362012,
+        "y": 1216.9851308737218
+      },
+      "data": {
+        "label": "Line 6",
+        "length_km": "1.0",
+        "r_ohm_per_km": "2.4330375",
+        "x_ohm_per_km": "7.6745475",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_7",
+      "type": "transmission_line",
+      "position": {
+        "x": 1059.6143846703383,
+        "y": 510.2222384133997
+      },
+      "data": {
+        "label": "Line 7",
+        "length_km": "1.0",
+        "r_ohm_per_km": "4.10921472e-05",
+        "x_ohm_per_km": "8.6052096e-05",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_8",
+      "type": "transmission_line",
+      "position": {
+        "x": 1437.5105297324058,
+        "y": 483.70466589712186
+      },
+      "data": {
+        "label": "Line 8",
+        "length_km": "1.0",
+        "r_ohm_per_km": "5.31757824e-05",
+        "x_ohm_per_km": "0.0001106736384",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_9",
+      "type": "transmission_line",
+      "position": {
+        "x": 1251.110337051854,
+        "y": 477.69972823573744
+      },
+      "data": {
+        "label": "Line 9",
+        "length_km": "1.0",
+        "r_ohm_per_km": "2.8619136e-05",
+        "x_ohm_per_km": "5.63600128e-05",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_10",
+      "type": "transmission_line",
+      "position": {
+        "x": 539.9712216719017,
+        "y": 843.267510938346
+      },
+      "data": {
+        "label": "Line 10",
+        "length_km": "1.0",
+        "r_ohm_per_km": "1.37622784e-05",
+        "x_ohm_per_km": "3.655808e-05",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_11",
+      "type": "transmission_line",
+      "position": {
+        "x": 742.0376848359897,
+        "y": 828.8762270586178
+      },
+      "data": {
+        "label": "Line 11",
+        "length_km": "1.0",
+        "r_ohm_per_km": "5.49928704e-05",
+        "x_ohm_per_km": "0.0001169772032",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_12",
+      "type": "transmission_line",
+      "position": {
+        "x": 622.678796051563,
+        "y": 520.2805957431674
+      },
+      "data": {
+        "label": "Line 12",
+        "length_km": "1.0",
+        "r_ohm_per_km": "3.5498112e-05",
+        "x_ohm_per_km": "8.30971648e-05",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_13",
+      "type": "transmission_line",
+      "position": {
+        "x": 1386.1683120176576,
+        "y": 321.99835413845443
+      },
+      "data": {
+        "label": "Line 13",
+        "length_km": "1.0",
+        "r_ohm_per_km": "9.55788288e-05",
+        "x_ohm_per_km": "8.64760832e-05",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "line_14",
+      "type": "transmission_line",
+      "position": {
+        "x": 1016.2412115971667,
+        "y": 473.3668016857769
+      },
+      "data": {
+        "label": "Line 14",
+        "length_km": "1.0",
+        "r_ohm_per_km": "7.39511552e-05",
+        "x_ohm_per_km": "0.0001505673728",
+        "type": "generic_line"
+      },
+      "measured": {
+        "width": 198,
+        "height": 52
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "trafo_0",
+      "type": "transformer",
+      "position": {
+        "x": 751.1252006844777,
+        "y": 1372.2429717943548
+      },
+      "data": {
+        "label": "Trafo 0",
+        "std_type": "generic"
+      },
+      "measured": {
+        "width": 180,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "trafo_1",
+      "type": "transformer",
+      "position": {
+        "x": 804.5701979854418,
+        "y": 1185.6799094146118
+      },
+      "data": {
+        "label": "Trafo 1",
+        "std_type": "generic"
+      },
+      "measured": {
+        "width": 180,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "trafo_2",
+      "type": "transformer",
+      "position": {
+        "x": 1325.2569033414366,
+        "y": 864.5143750676885
+      },
+      "data": {
+        "label": "Trafo 2",
+        "std_type": "generic"
+      },
+      "measured": {
+        "width": 180,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "trafo_3",
+      "type": "transformer",
+      "position": {
+        "x": 372.2355356064119,
+        "y": 1518.2624090448599
+      },
+      "data": {
+        "label": "Trafo 3",
+        "std_type": "generic"
+      },
+      "measured": {
+        "width": 180,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "trafo_4",
+      "type": "transformer",
+      "position": {
+        "x": 597.9160685137879,
+        "y": 1213.575329602495
+      },
+      "data": {
+        "label": "Trafo 4",
+        "std_type": "generic"
+      },
+      "measured": {
+        "width": 180,
+        "height": 112
+      },
+      "selected": false,
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "xy-edge__ext_0-bus_0",
+      "source": "ext_0",
+      "target": "bus_0",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__gen_0-bus_1",
+      "source": "gen_0",
+      "target": "bus_1",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__gen_1-bus_2",
+      "source": "gen_1",
+      "target": "bus_2",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__gen_2-bus_5",
+      "source": "gen_2",
+      "target": "bus_5",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__gen_3-bus_7",
+      "source": "gen_3",
+      "target": "bus_7",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_0-bus_1",
+      "source": "load_0",
+      "target": "bus_1",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_1-bus_2",
+      "source": "load_1",
+      "target": "bus_2",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_2-bus_3",
+      "source": "load_2",
+      "target": "bus_3",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_3-bus_4",
+      "source": "load_3",
+      "target": "bus_4",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_4-bus_5",
+      "source": "load_4",
+      "target": "bus_5",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_5-bus_8",
+      "source": "load_5",
+      "target": "bus_8",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_6-bus_9",
+      "source": "load_6",
+      "target": "bus_9",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_7-bus_10",
+      "source": "load_7",
+      "target": "bus_10",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_8-bus_11",
+      "source": "load_8",
+      "target": "bus_11",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_9-bus_12",
+      "source": "load_9",
+      "target": "bus_12",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__load_10-bus_13",
+      "source": "load_10",
+      "target": "bus_13",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__shunt_0-bus_8",
+      "source": "shunt_0",
+      "target": "bus_8",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_0-line_0",
+      "source": "bus_0",
+      "target": "line_0",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_0-bus_1",
+      "source": "line_0",
+      "target": "bus_1",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_0-line_1",
+      "source": "bus_0",
+      "target": "line_1",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_1-bus_4",
+      "source": "line_1",
+      "target": "bus_4",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_1-line_2",
+      "source": "bus_1",
+      "target": "line_2",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_2-bus_2",
+      "source": "line_2",
+      "target": "bus_2",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_1-line_3",
+      "source": "bus_1",
+      "target": "line_3",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_3-bus_3",
+      "source": "line_3",
+      "target": "bus_3",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_1-line_4",
+      "source": "bus_1",
+      "target": "line_4",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_4-bus_4",
+      "source": "line_4",
+      "target": "bus_4",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_2-line_5",
+      "source": "bus_2",
+      "target": "line_5",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_5-bus_3",
+      "source": "line_5",
+      "target": "bus_3",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_3-line_6",
+      "source": "bus_3",
+      "target": "line_6",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_6-bus_4",
+      "source": "line_6",
+      "target": "bus_4",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_5-line_7",
+      "source": "bus_5",
+      "target": "line_7",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_7-bus_10",
+      "source": "line_7",
+      "target": "bus_10",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_5-line_8",
+      "source": "bus_5",
+      "target": "line_8",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_8-bus_11",
+      "source": "line_8",
+      "target": "bus_11",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_5-line_9",
+      "source": "bus_5",
+      "target": "line_9",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_9-bus_12",
+      "source": "line_9",
+      "target": "bus_12",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_8-line_10",
+      "source": "bus_8",
+      "target": "line_10",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_10-bus_9",
+      "source": "line_10",
+      "target": "bus_9",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_8-line_11",
+      "source": "bus_8",
+      "target": "line_11",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_11-bus_13",
+      "source": "line_11",
+      "target": "bus_13",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_9-line_12",
+      "source": "bus_9",
+      "target": "line_12",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_12-bus_10",
+      "source": "line_12",
+      "target": "bus_10",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_11-line_13",
+      "source": "bus_11",
+      "target": "line_13",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_13-bus_12",
+      "source": "line_13",
+      "target": "bus_12",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_12-line_14",
+      "source": "bus_12",
+      "target": "line_14",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__line_14-bus_13",
+      "source": "line_14",
+      "target": "bus_13",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false
+    },
+    {
+      "id": "xy-edge__bus_3-trafo_0",
+      "source": "bus_3",
+      "target": "trafo_0",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "targetHandle": "hv"
+    },
+    {
+      "id": "xy-edge__trafo_0-bus_6",
+      "source": "trafo_0",
+      "target": "bus_6",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "sourceHandle": "lv"
+    },
+    {
+      "id": "xy-edge__bus_3-trafo_1",
+      "source": "bus_3",
+      "target": "trafo_1",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "targetHandle": "hv"
+    },
+    {
+      "id": "xy-edge__trafo_1-bus_8",
+      "source": "trafo_1",
+      "target": "bus_8",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "sourceHandle": "lv"
+    },
+    {
+      "id": "xy-edge__bus_4-trafo_2",
+      "source": "bus_4",
+      "target": "trafo_2",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "targetHandle": "hv"
+    },
+    {
+      "id": "xy-edge__trafo_2-bus_5",
+      "source": "trafo_2",
+      "target": "bus_5",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "sourceHandle": "lv"
+    },
+    {
+      "id": "xy-edge__bus_6-trafo_3",
+      "source": "bus_6",
+      "target": "trafo_3",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "targetHandle": "hv"
+    },
+    {
+      "id": "xy-edge__trafo_3-bus_7",
+      "source": "trafo_3",
+      "target": "bus_7",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "sourceHandle": "lv"
+    },
+    {
+      "id": "xy-edge__bus_6-trafo_4",
+      "source": "bus_6",
+      "target": "trafo_4",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "targetHandle": "hv"
+    },
+    {
+      "id": "xy-edge__trafo_4-bus_8",
+      "source": "trafo_4",
+      "target": "bus_8",
+      "type": "smoothstep",
+      "style": {
+        "stroke": "#0f172a",
+        "strokeWidth": 3
+      },
+      "animated": false,
+      "sourceHandle": "lv"
+    }
+  ]
+}

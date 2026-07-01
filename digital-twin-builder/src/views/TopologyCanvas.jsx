@@ -22,6 +22,7 @@ import TransformerNode from '../components/NetworkNodes/TransformerNode';
 import Transformer3WNode from '../components/NetworkNodes/Transformer3WNode';
 import SgenNode from '../components/NetworkNodes/SgenNode';
 import GenNode from '../components/NetworkNodes/GenNode';
+import ShuntNode from '../components/NetworkNodes/ShuntNode';
 import Sidebar from '../components/Sidebar';
 import NodePropertyModal from '../components/ConfigModals/NodePropertyModal';
 import AttackInterface from '../components/Panels/AttackInterface';
@@ -39,7 +40,8 @@ const nodeTypes = {
   transformer: TransformerNode,
   transformer3w: Transformer3WNode,
   sgen: SgenNode,
-  gen: GenNode
+  gen: GenNode,
+  shunt: ShuntNode
 };
 
 const TopologyCanvas = () => {
@@ -169,6 +171,7 @@ const TopologyCanvas = () => {
     if (isPair('bus', 'transformer3w')) return true;
     if (isPair('bus', 'sgen')) return true;
     if (isPair('bus', 'gen')) return true;
+    if (isPair('bus', 'shunt')) return true;
 
     // Any other connection is invalid (e.g. ext_grid to load, transmission_line to load)
     return false;

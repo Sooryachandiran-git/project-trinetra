@@ -11,7 +11,8 @@ import {
   Monitor,
   Cpu,
   Network,
-  Sun
+  Sun,
+  Magnet
 } from 'lucide-react';
 
 const SidebarItem = ({ type, label, icon, description }) => {
@@ -63,6 +64,7 @@ const Sidebar = () => {
           <SidebarItem type="load" label="Consumer Load" icon={<Activity />} description="P/Q Power Demand" />
           <SidebarItem type="sgen" label="Static Generator" icon={<Sun />} description="Inverter Source" />
           <SidebarItem type="gen" label="Generator" icon={<Zap />} description="Synchronous Machine" />
+          <SidebarItem type="shunt" label="Shunt Compensator" icon={<Magnet />} description="Capacitor/Reactor" />
         </div>
       </div>
 

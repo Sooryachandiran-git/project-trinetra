@@ -4,6 +4,13 @@
  * suitable for the FastAPI backend (Pandapower & OpenPLC orchestration).
  */
 
+// Helper to safely parse numbers, preserving 0.0 values which are falsy in JS
+const parseNum = (val, defaultVal) => {
+  if (val === undefined || val === null || val === '') return defaultVal;
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? defaultVal : parsed;
+};
+
 export const compileGridToJSON = (nodes, edges) => {
   const payload = {
     metadata: {
@@ -22,7 +29,8 @@ export const compileGridToJSON = (nodes, edges) => {
       transformers: [],
       transformers3w: [],
       sgens: [],
-      gens: []
+      gens: [],
+      shunts: []
     },
     scada_system: {
       ieds: [],
@@ -37,7 +45,7 @@ export const compileGridToJSON = (nodes, edges) => {
         payload.electrical_grid.buses.push({
           id: node.id,
           name: node.data.label || 'Bus',
-          vn_kv: parseFloat(node.data.vn_kv) || 110.0
+          vn_kv: parseNum(node.data.vn_kv, 110.0)
         });
         break;
       
@@ -45,8 +53,8 @@ export const compileGridToJSON = (nodes, edges) => {
         payload.electrical_grid.ext_grids.push({
           id: node.id,
           name: node.data.label || 'External Grid',
-          vm_pu: parseFloat(node.data.vm_pu) || 1.0,
-          va_degree: parseFloat(node.data.va_degree) || 0.0,
+          vm_pu: parseNum(node.data.vm_pu, 1.0),
+          va_degree: parseNum(node.data.va_degree, 0.0),
           // ext_grid must connect to a bus. We'll find that in the edges.
         });
         break;
@@ -55,8 +63,8 @@ export const compileGridToJSON = (nodes, edges) => {
         payload.electrical_grid.loads.push({
           id: node.id,
           name: node.data.label || 'Load',
-          p_mw: parseFloat(node.data.p_mw) || 50.0,
-          q_mvar: parseFloat(node.data.q_mvar) || 10.0
+          p_mw: parseNum(node.data.p_mw, 50.0),
+          q_mvar: parseNum(node.data.q_mvar, 10.0)
         });
         break;
 
@@ -74,9 +82,9 @@ export const compileGridToJSON = (nodes, edges) => {
         payload.electrical_grid.lines.push({
           id: node.id,
           name: node.data.label || 'Transmission Line',
-          length_km: parseFloat(node.data.length_km) || 10.0,
-          r_ohm_per_km: parseFloat(node.data.r_ohm_per_km) || 0.1,
-          x_ohm_per_km: parseFloat(node.data.x_ohm_per_km) || 0.2,
+          length_km: parseNum(node.data.length_km, 10.0),
+          r_ohm_per_km: parseNum(node.data.r_ohm_per_km, 0.1),
+          x_ohm_per_km: parseNum(node.data.x_ohm_per_km, 0.2),
           type: node.data.type || 'generic_line',
           from_node: inEdge ? inEdge.source : '',
           to_node: outEdge ? outEdge.target : ''
@@ -89,6 +97,9 @@ export const compileGridToJSON = (nodes, edges) => {
           id: node.id,
           name: node.data.label || 'Transformer',
           std_type: node.data.std_type || '160 MVA 380/110 kV',
+          sn_mva: parseNum(node.data.sn_mva, 100.0),
+          vk_percent: parseNum(node.data.vk_percent, 10.0),
+          vkr_percent: parseNum(node.data.vkr_percent, 0.1),
           hv_bus: '', // We will populate these in edge processing
           lv_bus: ''
         });
@@ -109,8 +120,8 @@ export const compileGridToJSON = (nodes, edges) => {
         payload.electrical_grid.sgens.push({
           id: node.id,
           name: node.data.label || 'Static Generator',
-          p_mw: parseFloat(node.data.p_mw) || 10.0,
-          q_mvar: parseFloat(node.data.q_mvar) || 0.0
+          p_mw: parseNum(node.data.p_mw, 10.0),
+          q_mvar: parseNum(node.data.q_mvar, 0.0)
         });
         break;
 
@@ -118,8 +129,19 @@ export const compileGridToJSON = (nodes, edges) => {
         payload.electrical_grid.gens.push({
           id: node.id,
           name: node.data.label || 'Generator',
-          p_mw: parseFloat(node.data.p_mw) || 100.0,
-          vm_pu: parseFloat(node.data.vm_pu) || 1.0
+          p_mw: parseNum(node.data.p_mw, 100.0),
+          vm_pu: parseNum(node.data.vm_pu, 1.0)
+        });
+        break;
+
+      case 'shunt':
+        payload.electrical_grid.shunts.push({
+          id: node.id,
+          name: node.data.label || 'Shunt',
+          p_mw: parseNum(node.data.p_mw, 0.0),
+          q_mvar: parseNum(node.data.q_mvar, 19.0),
+          vn_kv: parseNum(node.data.vn_kv, 110.0),
+          step: parseInt(node.data.step) || 1
         });
         break;
 

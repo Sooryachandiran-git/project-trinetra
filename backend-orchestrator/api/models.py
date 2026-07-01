@@ -40,6 +40,9 @@ class TransformerModel(BaseModel):
     hv_bus: str
     lv_bus: str
     std_type: str = "160 MVA 380/110 kV"
+    sn_mva: float = 100.0
+    vk_percent: float = 10.0
+    vkr_percent: float = 0.1
 
 class Transformer3WModel(BaseModel):
     id: str
@@ -61,6 +64,14 @@ class GenModel(BaseModel):
     p_mw: float
     vm_pu: float = 1.0
 
+class ShuntModel(BaseModel):
+    id: str
+    name: str = "Shunt"
+    p_mw: float = 0.0
+    q_mvar: float = 19.0
+    vn_kv: float = 110.0
+    step: int = 1
+
 class ElectricalGridModel(BaseModel):
     buses: List[BusModel] = []
     ext_grids: List[ExtGridModel] = []
@@ -71,6 +82,7 @@ class ElectricalGridModel(BaseModel):
     transformers3w: List[Transformer3WModel] = []
     sgens: List[SgenModel] = []
     gens: List[GenModel] = []
+    shunts: List[ShuntModel] = []
 
 
 # --- SCADA MODBUS MODELS ---

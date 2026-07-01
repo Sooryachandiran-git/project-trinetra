@@ -106,6 +106,58 @@ const NodePropertyModal = () => {
             </div>
           </div>
         );
+      case 'shunt':
+        return (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Active Power (P in MW)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="p_mw"
+                value={formData.p_mw || '0.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">At nominal voltage (v=1.0 pu)</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Reactive Power (Q in MVar)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="q_mvar"
+                value={formData.q_mvar || '19.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">At nominal voltage (v=1.0 pu)</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Nominal Voltage (vn_kv)</label>
+              <input
+                type="number"
+                step="0.1"
+                name="vn_kv"
+                value={formData.vn_kv || '110.0'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Step</label>
+              <input
+                type="number"
+                step="1"
+                name="step"
+                value={formData.step || '1'}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">Number of active shunt steps (integer)</p>
+            </div>
+          </div>
+        );
       case 'breaker':
         return (
           <div className="space-y-4">
@@ -255,8 +307,48 @@ const NodePropertyModal = () => {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-slate-500 mt-1">Pandapower standard type string.</p>
+              <p className="text-xs text-slate-500 mt-1">Pandapower standard type string. Use "generic" for custom impedance.</p>
             </div>
+            {(formData.std_type === 'generic') && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Rated Power (sn_mva)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    name="sn_mva"
+                    value={formData.sn_mva !== undefined ? formData.sn_mva : '100.0'}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Apparent power base for impedances (e.g. 9900.0 for IEEE-14).</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Short Circuit Voltage (vk %)</label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      name="vk_percent"
+                      value={formData.vk_percent !== undefined ? formData.vk_percent : '10.0'}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Real Part (vkr %)</label>
+                    <input
+                      type="number"
+                      step="0.001"
+                      name="vkr_percent"
+                      value={formData.vkr_percent !== undefined ? formData.vkr_percent : '0.1'}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
       case 'sgen':

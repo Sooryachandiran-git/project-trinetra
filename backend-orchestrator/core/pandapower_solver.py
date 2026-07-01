@@ -67,6 +67,12 @@ def solve_pure_pandapower(grid: ElectricalGridModel):
             if bus_id is not None:
                 pp.create_gen(net, bus=bus_id, p_mw=gen.p_mw, vm_pu=gen.vm_pu, name=gen.name)
 
+        # Create Shunts
+        for shunt in grid.shunts:
+            bus_id = find_bus_for_component(shunt.id)
+            if bus_id is not None:
+                pp.create_shunt(net, bus=bus_id, q_mvar=shunt.q_mvar, p_mw=shunt.p_mw, vn_kv=shunt.vn_kv, step=shunt.step, name=shunt.name)
+
         # 6. Create Lines
         for line in grid.lines:
             # Check if this line is actually connecting two buses
@@ -90,7 +96,17 @@ def solve_pure_pandapower(grid: ElectricalGridModel):
             bus_lv = bus_map.get(trafo.lv_bus)
             
             if bus_hv is not None and bus_lv is not None:
-                pp.create_transformer(net, hv_bus=bus_hv, lv_bus=bus_lv, std_type=trafo.std_type, name=trafo.name)
+                try:
+                    pp.create_transformer(net, hv_bus=bus_hv, lv_bus=bus_lv, std_type=trafo.std_type, name=trafo.name)
+                except Exception as e:
+                    logger.warning(f"Failed to create transformer with std_type '{trafo.std_type}'. Falling back to generic parameters.")
+                    # Fallback to a generic transformer based on connected bus voltages
+                    vn_hv = net.bus.at[bus_hv, "vn_kv"]
+                    vn_lv = net.bus.at[bus_lv, "vn_kv"]
+                    pp.create_transformer_from_parameters(net, hv_bus=bus_hv, lv_bus=bus_lv, 
+                                                          sn_mva=trafo.sn_mva, vn_hv_kv=vn_hv, vn_lv_kv=vn_lv, 
+                                                          vk_percent=trafo.vk_percent, vkr_percent=trafo.vkr_percent, 
+                                                          pfe_kw=10.0, i0_percent=0.1, name=trafo.name)
                 
         # 8. Create 3W Transformers
         for trafo3w in grid.transformers3w:
@@ -137,6 +153,7 @@ def solve_pure_pandapower(grid: ElectricalGridModel):
                 "res_ext_grid": clean_df(net.res_ext_grid),
                 "res_sgen": clean_df(net.res_sgen) if hasattr(net, 'res_sgen') else [],
                 "res_gen": clean_df(net.res_gen) if hasattr(net, 'res_gen') else [],
+                "res_shunt": clean_df(net.res_shunt) if hasattr(net, 'res_shunt') else [],
             }
             return results
         else:
